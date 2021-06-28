@@ -21,6 +21,11 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
+    <PackageReference Include="TSMoreland.GuardAssertions" Version="0.1.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\TSMoreland.Extensions.Http.Abstractions\TSMoreland.Extensions.Http.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

@@ -13,17 +13,18 @@
 
 using System;
 using System.Net.Http;
+using TSMoreland.Extensions.Http.Abstractions;
 
 namespace TSMoreland.Extensions.Http
 {
-    public sealed class ProxiedEnabledHttpClientFactory : IHttpClientFactory, IHttpMessageHandlerFactory
+    public sealed class ProxiedEnabledHttpClientFactory : IProxiedHttpClientFactory, IHttpMessageHandlerFactory
     {
-        public HttpClient CreateClient(string name)
+        public HttpMessageHandler CreateHandler(string name)
         {
             throw new NotImplementedException();
         }
 
-        public HttpMessageHandler CreateHandler(string name)
+        public HttpClient CreateClient(NamedProxy proxy)
         {
             throw new NotImplementedException();
         }
