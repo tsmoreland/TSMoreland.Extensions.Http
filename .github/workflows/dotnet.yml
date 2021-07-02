@@ -17,6 +17,8 @@ jobs:
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 5.0.x
+    - name: Add nuget sources
+      run: dotnet nuget add source https://nuget.pkg.github.com/tsmoreland/index.json -n github-tsmoreland
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
