@@ -18,7 +18,9 @@ jobs:
       with:
         dotnet-version: 5.0.x
     - name: Add nuget sources
-      run: dotnet nuget add source https://nuget.pkg.github.com/tsmoreland/index.json -n github-tsmoreland
+      env: 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}        
+      run: dotnet nuget add source https://nuget.pkg.github.com/tsmoreland/index.json -n github-tsmoreland -k ${GITHUB_TOKEN}
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
