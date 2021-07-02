@@ -27,15 +27,15 @@ using TSMoreland.Extensions.Http.Internal;
 
 namespace TSMoreland.Extensions.Http
 {
-    public sealed class ProxiedEnabledHttpClientFactory : IProxiedHttpClientFactory, IHttpMessageHandlerFactory
+    public sealed class UpdatableHttpClientFactory : IProxiedHttpClientFactory, IHttpMessageHandlerFactory
     {
-        private static readonly TimerCallback _cleanupCallback = (s) => ((ProxiedEnabledHttpClientFactory)s).CleanupTimer_Tick();
-        private readonly ILogger<ProxiedEnabledHttpClientFactory> _logger;
+        private static readonly TimerCallback _cleanupCallback = (s) => ((UpdatableHttpClientFactory)s).CleanupTimer_Tick();
+        private readonly ILogger<UpdatableHttpClientFactory> _logger;
         private readonly IServiceProvider _services;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IOptionsMonitor<HttpClientFactoryOptions> _optionsMonitor;
         private readonly IHttpMessageHandlerBuilderFilter[] _filters;
-        private readonly Func<string, Lazy<ActiveProxyHandlerTrackingEntry>> _entryFactory;
+        private readonly Func<string, Lazy<ActiveHandlerTrackingEntry>> _entryFactory;
         private readonly IHttpClientFactory _clientFactory;
 
         // Default time of 10s for cleanup seems reasonable.
@@ -61,7 +61,7 @@ namespace TSMoreland.Extensions.Http
         // for each name.
         //
         // internal for tests
-        internal readonly ConcurrentDictionary<string, Lazy<ActiveProxyHandlerTrackingEntry>> _activeHandlers;
+        internal readonly ConcurrentDictionary<string, Lazy<ActiveHandlerTrackingEntry>> _activeHandlers;
 
         // Collection of 'expired' but not yet disposed handlers.
         //
@@ -69,13 +69,13 @@ namespace TSMoreland.Extensions.Http
         // are eligible for garbage collection.
         //
         // internal for tests
-        internal readonly ConcurrentQueue<ExpiredProxyHandlerTrackingEntry> _expiredHandlers;
+        internal readonly ConcurrentQueue<ExpiredHandlerTrackingEntry> _expiredHandlers;
         private readonly TimerCallback _expiryCallback;
 
         /// <summary>
-        /// Instantiates a new instance of <see cref="ProxiedEnabledHttpClientFactory"/> class.
+        /// Instantiates a new instance of <see cref="UpdatableHttpClientFactory"/> class.
         /// </summary>
-        public ProxiedEnabledHttpClientFactory(
+        public UpdatableHttpClientFactory(
             IServiceProvider services,
             IServiceScopeFactory scopeFactory,
             ILoggerFactory loggerFactory,
@@ -100,19 +100,15 @@ namespace TSMoreland.Extensions.Http
             _optionsMonitor = optionsMonitor ?? throw new ArgumentNullException(nameof(optionsMonitor));
             _filters = filters.ToArray();
 
-            _logger = loggerFactory.CreateLogger<ProxiedEnabledHttpClientFactory>();
+            _logger = loggerFactory.CreateLogger<UpdatableHttpClientFactory>();
 
             // case-sensitive because named options is.
-            _activeHandlers = new ConcurrentDictionary<string, Lazy<ActiveProxyHandlerTrackingEntry>>(StringComparer.Ordinal);
-            _entryFactory = (name) =>
-            {
-                return new Lazy<ActiveProxyHandlerTrackingEntry>(() =>
-                {
-                    return CreateHandlerEntry(name);
-                }, LazyThreadSafetyMode.ExecutionAndPublication);
-            };
+            _activeHandlers = new ConcurrentDictionary<string, Lazy<ActiveHandlerTrackingEntry>>(StringComparer.Ordinal);
+            _entryFactory = (name) => 
+                new Lazy<ActiveHandlerTrackingEntry>(() => 
+                    CreateHandlerEntry(name), LazyThreadSafetyMode.ExecutionAndPublication);
 
-            _expiredHandlers = new ConcurrentQueue<ExpiredProxyHandlerTrackingEntry>();
+            _expiredHandlers = new ConcurrentQueue<ExpiredHandlerTrackingEntry>();
             _expiryCallback = ExpiryTimer_Tick;
 
             _cleanupTimerLock = new object();
@@ -122,8 +118,6 @@ namespace TSMoreland.Extensions.Http
         /// <inheritdoc cref="IHttpClientFactory.CreateClient"/>
         public HttpClient CreateClient(string name)
         {
-            return _clientFactory.CreateClient(name);
-            /*
             if (name == null)
             {
                 throw new ArgumentNullException(nameof(name));
@@ -139,7 +133,6 @@ namespace TSMoreland.Extensions.Http
             }
 
             return client;
-            */
         }
         public HttpClient CreateClient(NamedProxy proxy)
         {
@@ -161,7 +154,7 @@ namespace TSMoreland.Extensions.Http
         }
 
         // Internal for tests
-        internal ActiveProxyHandlerTrackingEntry CreateHandlerEntry(string name)
+        internal ActiveHandlerTrackingEntry CreateHandlerEntry(string name)
         {
             IServiceProvider services = _services;
             var scope = (IServiceScope?)null;
@@ -198,7 +191,7 @@ namespace TSMoreland.Extensions.Http
                 // Otherwise it would be possible that we start the timer here, immediately expire it (very short
                 // timer) and then dispose it without ever creating a client. That would be bad. It's unlikely
                 // this would happen, but we want to be sure.
-                return new ActiveProxyHandlerTrackingEntry(name, handler, scope, options.HandlerLifetime);
+                return new ActiveHandlerTrackingEntry(name, handler, scope, options.HandlerLifetime);
 
                 void Configure(HttpMessageHandlerBuilder b)
                 {
@@ -219,11 +212,11 @@ namespace TSMoreland.Extensions.Http
         // Internal for tests
         internal void ExpiryTimer_Tick(object state)
         {
-            var active = (ActiveProxyHandlerTrackingEntry)state;
+            var active = (ActiveHandlerTrackingEntry)state;
 
             // The timer callback should be the only one removing from the active collection. If we can't find
             // our entry in the collection, then this is a bug.
-            bool removed = _activeHandlers.TryRemove(active.Name, out Lazy<ActiveProxyHandlerTrackingEntry> found);
+            bool removed = _activeHandlers.TryRemove(active.Name, out Lazy<ActiveHandlerTrackingEntry> found);
             Debug.Assert(removed, "Entry not found. We should always be able to remove the entry");
             Debug.Assert(ReferenceEquals(active, found.Value), "Different entry found. The entry should not have been replaced");
 
@@ -233,7 +226,7 @@ namespace TSMoreland.Extensions.Http
             //
             // We use a different state object to track expired handlers. This allows any other thread that acquired
             // the 'active' entry to use it without safety problems.
-            var expired = new ExpiredProxyHandlerTrackingEntry(active);
+            var expired = new ExpiredHandlerTrackingEntry(active);
             _expiredHandlers.Enqueue(expired);
 
             Log.HandlerExpired(_logger, active.Name, active.Lifetime);
@@ -242,7 +235,7 @@ namespace TSMoreland.Extensions.Http
         }
 
         // Internal so it can be overridden in tests
-        internal void StartHandlerEntryTimer(ActiveProxyHandlerTrackingEntry entry)
+        internal void StartHandlerEntryTimer(ActiveHandlerTrackingEntry entry)
         {
             entry.StartExpiryTimer(_expiryCallback);
         }
@@ -350,7 +343,7 @@ namespace TSMoreland.Extensions.Http
 
         private static class Log
         {
-            public static class EventIds
+            private static class EventIds
             {
                 public static readonly EventId CleanupCycleStartEvent = new (100, nameof(CleanupCycleStart));
                 public static readonly EventId CleanupCycleEndEvent = new (101, nameof(CleanupCycleEnd));

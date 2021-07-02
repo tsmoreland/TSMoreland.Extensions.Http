@@ -13,15 +13,14 @@ namespace TSMoreland.Extensions.Http.Internal
     /// <remarks>
     /// Copied from
     /// https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Http/src/ExpiredHandlerTrackingEntry.cs
-    /// modified to target Proxy equivalent of other copies
     /// </remarks>
-    internal sealed class ExpiredProxyHandlerTrackingEntry
+    internal sealed class ExpiredHandlerTrackingEntry
     {
         private readonly WeakReference _livenessTracker;
 
         // IMPORTANT: don't cache a reference to `other` or `other.Handler` here.
         // We need to allow it to be GC'ed.
-        public ExpiredProxyHandlerTrackingEntry(ActiveProxyHandlerTrackingEntry other)
+        public ExpiredHandlerTrackingEntry(ActiveHandlerTrackingEntry other)
         {
             Name = other.Name;
             Scope = other.Scope;

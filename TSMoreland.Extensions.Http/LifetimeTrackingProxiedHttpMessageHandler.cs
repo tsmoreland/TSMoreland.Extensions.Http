@@ -23,7 +23,7 @@ namespace TSMoreland.Extensions.Http
 
         protected override void Dispose(bool disposing)
         {
-            // The lifetime of this is tracked separately by ActiveProxyHandlerTrackingEntry
+            // The lifetime of this is tracked separately by ActiveHandlerTrackingEntry
         }
     }
 }

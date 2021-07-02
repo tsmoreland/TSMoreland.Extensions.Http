@@ -14,18 +14,18 @@ namespace TSMoreland.Extensions.Http.Internal
     /// </summary>
     /// <remarks>
     /// Copied from
-    /// https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Http/src/ActiveProxyHandlerTrackingEntry.cs
+    /// https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Http/src/ActiveHandlerTrackingEntry.cs
     /// modified to add Proxy support
     /// </remarks>
-    internal sealed class ActiveProxyHandlerTrackingEntry
+    internal sealed class ActiveHandlerTrackingEntry
     {
-        private static readonly TimerCallback _timerCallback = (s) => ((ActiveProxyHandlerTrackingEntry) s).Timer_Tick();
+        private static readonly TimerCallback _timerCallback = (s) => ((ActiveHandlerTrackingEntry) s).Timer_Tick();
         private readonly object _lock;
         private bool _timerInitialized;
         private Timer? _timer;
         private TimerCallback? _callback;
 
-        public ActiveProxyHandlerTrackingEntry(
+        public ActiveHandlerTrackingEntry(
             string name,
             LifetimeTrackingProxiedHttpMessageHandler handler,
             IServiceScope? scope,
