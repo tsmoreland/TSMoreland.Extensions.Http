@@ -2,7 +2,9 @@
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace TSMoreland.Extensions.Http
 {
@@ -10,8 +12,10 @@ namespace TSMoreland.Extensions.Http
     {
         private readonly IHttpClientFactory _clientFactory;
         private readonly ILogger<HttpClientRepository> _logger;
+
         private readonly object _activeHandlers;
         private readonly MethodInfo _activeHandlersTryRemove;
+        private readonly IOptionsMonitor<HttpClientFactoryOptions> _optionsMonitor;
 
         public HttpClientRepository(IHttpClientFactory clientFactory, ILogger<HttpClientRepository> logger)
         {
@@ -26,11 +30,20 @@ namespace TSMoreland.Extensions.Http
                     .Where(field => string.Equals(field.Name, "_activeHandlers", StringComparison.OrdinalIgnoreCase))
                     .Select(field => field.GetValue(_clientFactory))
                     .SingleOrDefault()
-                ?? new ArgumentException("Unable to locate active and/or expired handlers in client factory",
+                ?? throw new ArgumentException("Unable to locate active and/or expired handlers in client factory",
                     nameof(clientFactory));
-
             _activeHandlersTryRemove = GetFirstRemoveMethodOrThrow(_activeHandlers.GetType());
 
+            _optionsMonitor =
+                fields
+                    .Where(field => string.Equals(field.Name, "_optionsMonitor", StringComparison.OrdinalIgnoreCase))
+                    .Select(field => field.GetValue(_clientFactory))
+                    .OfType<IOptionsMonitor<HttpClientFactoryOptions>>()
+                    .SingleOrDefault()
+                ?? throw new ArgumentException("Unable to locate active and/or expired handlers in client factory",
+                    nameof(clientFactory));
+
+            
             MethodInfo GetFirstRemoveMethodOrThrow(Type type) =>
                 type.GetMethods().FirstOrDefault(m => m.Name == "TryRemove" && m.GetParameters().Length == 2)
                     ?? throw new ArgumentException("Unable to locate TryRemove method", nameof(clientFactory));
