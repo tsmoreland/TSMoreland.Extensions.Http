@@ -35,9 +35,9 @@ namespace TSMoreland.Extensions.Http
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly IOptionsMonitor<HttpClientFactoryOptions> _optionsMonitor;
         private readonly IHttpMessageHandlerBuilderFilter[] _filters;
-        private readonly Func<string, Lazy<ActiveHandlerTrackingEntry>> _entryFactory;
         private readonly IHttpClientFactory _clientFactory;
 
+        private readonly Func<string, Lazy<ActiveHandlerTrackingEntry>> _entryFactory;
         // Default time of 10s for cleanup seems reasonable.
         // Quick math:
         // 10 distinct named clients * expiry time >= 1s = approximate cleanup queue of 100 items

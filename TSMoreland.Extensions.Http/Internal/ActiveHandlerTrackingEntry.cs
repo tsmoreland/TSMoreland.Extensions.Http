@@ -15,7 +15,6 @@ namespace TSMoreland.Extensions.Http.Internal
     /// <remarks>
     /// Copied from
     /// https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Http/src/ActiveHandlerTrackingEntry.cs
-    /// modified to add Proxy support
     /// </remarks>
     internal sealed class ActiveHandlerTrackingEntry
     {
