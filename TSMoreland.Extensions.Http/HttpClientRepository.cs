@@ -10,6 +10,8 @@
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
 // WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
+// Contains code based on or copied from https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs
+// which is licensed under the the MIT License (same license as above).
 
 using System;
 using System.Collections.Concurrent;
@@ -20,6 +22,7 @@ using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TSMoreland.Extensions.Http.Internal;
+using TSMoreland.GuardAssertions;
 
 namespace TSMoreland.Extensions.Http
 {
@@ -35,22 +38,21 @@ namespace TSMoreland.Extensions.Http
     /// this class allows them to be added, updated or removed at runtime.
     /// </para>
     /// </summary>
-    public sealed class HttpClientRepository : IHttpClientRepository
+    public sealed class HttpClientRepository<T> : IHttpClientRepository<T>
     {
-        private static readonly TimerCallback _cleanupCallback = (s) => ((HttpClientRepository)s).CleanupTimer_Tick();
+        private static readonly TimerCallback _cleanupCallback = (s) => ((HttpClientRepository<T>)s).CleanupTimer_Tick();
         private readonly IHttpClientFactory _clientFactory;
         private readonly IServiceScopeFactory _scopeFactory;
-        private readonly ILogger<HttpClientRepository> _logger;
+        private readonly ILogger<HttpClientRepository<T>> _logger;
 
-        private readonly ConcurrentDictionary<string, Func<object, HttpMessageHandler>> _messageHandlerBuildersByName;
+        private readonly ConcurrentDictionary<string, BuildHttpMessageHandler<T>> _messageHandlerBuildersByName;
 
         // Default time of 10s for cleanup seems reasonable.
         // Quick math:
         // 10 distinct named clients * expiry time >= 1s = approximate cleanup queue of 100 items
         //
         // This seems frequent enough. We also rely on GC occurring to actually trigger disposal.
-        // ReSharper disable once InconsistentNaming
-        private readonly TimeSpan DefaultCleanupInterval = TimeSpan.FromSeconds(10);
+        private TimeSpan DefaultCleanupInterval { get; } = TimeSpan.FromSeconds(10);
 
         // We use a new timer for each regular cleanup cycle, protected with a lock. Note that this scheme
         // doesn't give us anything to dispose, as the timer is started/stopped as needed.
@@ -79,7 +81,7 @@ namespace TSMoreland.Extensions.Http
         private readonly TimerCallback _expiryCallback;
 
         /// <summary>
-        /// Instantiates a new instance of the <see cref="HttpClientRepository"/> class.
+        /// Instantiates a new instance of the <see cref="HttpClientRepository{T}"/> class.
         /// </summary>
         /// <param name="clientFactory">fallback <see cref="IHttpClientFactory"/> used if name is not recognized by the repository</param>
         /// <param name="scopeFactory">scope factory used when creating tracking entries to managed life time of client and it's dependencies</param>
@@ -87,13 +89,13 @@ namespace TSMoreland.Extensions.Http
         public HttpClientRepository(
             IHttpClientFactory clientFactory, 
             IServiceScopeFactory scopeFactory,
-            ILogger<HttpClientRepository> logger)
+            ILogger<HttpClientRepository<T>> logger)
         {
             _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
             _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            _messageHandlerBuildersByName = new ConcurrentDictionary<string, Func<object, HttpMessageHandler>>();
+            _messageHandlerBuildersByName = new ConcurrentDictionary<string, BuildHttpMessageHandler<T>>();
 
             // case-sensitive because named options is.
             _activeHandlers = new ConcurrentDictionary<string, Lazy<ActiveHandlerTrackingEntry>>(StringComparer.Ordinal);
@@ -112,30 +114,24 @@ namespace TSMoreland.Extensions.Http
         }
 
         /// <inheritdoc/>
-        public HttpClient CreateClient(string name, object options)
+        public HttpClient CreateClient(string name, T argument)
         {
             if (name == null)
             {
                 throw new ArgumentNullException(nameof(name));
             }
 
-            var handler = CreateHandler(name, options);
-            if (handler == null)
-            {
-                return _clientFactory.CreateClient(name);
-            }
-
-            return _clientFactory.CreateClient(name);
+            var handler = CreateHandler(name, argument);
+            return handler == null 
+                ? _clientFactory.CreateClient(name) 
+                : new HttpClient(handler, disposeHandler: false);
         }
 
-        public HttpMessageHandler? CreateHandler(string name, object options)
+        public HttpMessageHandler? CreateHandler(string name, T argument)
         {
-            if (name == null)
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
+            Guard.Against.ArgumentNull(name, nameof(name));
 
-            var handler = TryBuildActiveHandlerTrackingEntry(name, options);
+            var handler = TryBuildActiveHandlerTrackingEntry(name, argument);
             if (handler.Value == null)
             {
                 // method doesn't seem to be available through direct access but is thread-safe and accessible through interface
@@ -149,7 +145,7 @@ namespace TSMoreland.Extensions.Http
             StartHandlerEntryTimer(entry);
             return entry.Handler;
 
-            Lazy<ActiveHandlerTrackingEntry?> TryBuildActiveHandlerTrackingEntry(string localName, object localOptions)
+            Lazy<ActiveHandlerTrackingEntry?> TryBuildActiveHandlerTrackingEntry(string localName, T localOptions)
             {
                 return new(() => CreateHandlerEntry(localName, localOptions), LazyThreadSafetyMode.ExecutionAndPublication);
             }
@@ -157,16 +153,21 @@ namespace TSMoreland.Extensions.Http
         }
 
         /// <inheritdoc/>
-        public void AddOrUpdate(string name, Func<object, HttpMessageHandler> builder)
+        public BuildHttpMessageHandler<T> AddOrUpdate(string name, BuildHttpMessageHandler<T> builder)
         {
+            Guard.Against.ArgumentNull(name, nameof(name));
+            Guard.Against.ArgumentNull(builder, nameof(builder));
+
             _logger.LogDebug($"Adding or updating {name} message handler builder");
             // add, most recent call wins the race if multiple calls
-            _messageHandlerBuildersByName.AddOrUpdate(name, builder, (_, _) => builder);
+            return _messageHandlerBuildersByName.AddOrUpdate(name, builder, (_, _) => builder);
         }
 
         /// <inheritdoc/>
         public bool TryRemoveClient(string name)
         {
+            Guard.Against.ArgumentNull(name, nameof(name));
+
             if (!_messageHandlerBuildersByName.TryRemove(name, out _))
             {
                 return false;
@@ -183,7 +184,7 @@ namespace TSMoreland.Extensions.Http
         /// https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L136
         /// internal for testing
         /// </remarks>
-        internal ActiveHandlerTrackingEntry? CreateHandlerEntry(string name, object options)
+        internal ActiveHandlerTrackingEntry? CreateHandlerEntry(string name, T argument)
         {
             IServiceScope? scope = null;
             try
@@ -196,7 +197,7 @@ namespace TSMoreland.Extensions.Http
                 }
 
                 // Wrap the handler so we can ensure the inner handler outlives the outer handler.
-                var handler = new LifetimeTrackingProxiedHttpMessageHandler(builder(options));
+                var handler = new LifetimeTrackingProxiedHttpMessageHandler(builder(argument));
 
                 // Note that we can't start the timer here. That would introduce a very very subtle race condition
                 // with very short expiry times. We need to wait until we've actually handed out the handler once

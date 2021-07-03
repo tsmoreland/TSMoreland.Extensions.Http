@@ -25,35 +25,27 @@ namespace TSMoreland.Extensions.Http.Tests
     public class HttpClientRepositoryTests
     {
         private IServiceProvider _serviceProvider = null!;
-        private Mock<ILogger<HttpClientRepository>> _logger = null!;
+        private Mock<ILogger<HttpClientRepository<object>>> _logger = null!;
         private Mock<IServiceScopeFactory> _serviceScopeFactory = null!;
         private Mock<IServiceScope> _serviceScope = null!;
         private Mock<IHttpClientFactory> _clientFactory = null!;
 
-        private HttpClientRepository _repository = null!;
+        private HttpClientRepository<object> _repository = null!;
 
-        [OneTimeSetUp]
-        public void OneTimeSetup()
+        [SetUp]
+        public void Setup()
         {
             var serviceCollection = new ServiceCollection();
             serviceCollection.AddHttpClient();
 
             serviceCollection
-                .AddHttpClient("bravo")
-                .AddHttpMessageHandler(() => new LoggingHttpMessageHandler(_logger.Object));
-
-            serviceCollection
-                .AddHttpClient("charlie")
+                .AddHttpClient("zulu")
                 .AddHttpMessageHandler(() => new LoggingHttpMessageHandler(_logger.Object));
 
             _serviceProvider = serviceCollection.BuildServiceProvider();
 
-        }
 
-        [SetUp]
-        public void Setup()
-        {
-            _logger = new Mock<ILogger<HttpClientRepository>>();
+            _logger = new Mock<ILogger<HttpClientRepository<object>>>();
             _clientFactory = new Mock<IHttpClientFactory>();
             _serviceScope = new Mock<IServiceScope>();
             _serviceScopeFactory = new Mock<IServiceScopeFactory>();
@@ -61,20 +53,20 @@ namespace TSMoreland.Extensions.Http.Tests
                 .Setup(f => f.CreateScope())
                 .Returns(_serviceScope.Object);
 
-            _repository = new HttpClientRepository(_serviceProvider.GetService<IHttpClientFactory>()!, _serviceScopeFactory.Object, _logger.Object);
+            _repository = new HttpClientRepository<object>(_serviceProvider.GetService<IHttpClientFactory>()!, _serviceScopeFactory.Object, _logger.Object);
         }
 
         [Test]
         public void Constructor_ThrowsArgumentNullException_WhenHttpClientFactoryIsNull()
         {
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository(null!, _serviceScopeFactory.Object, _logger.Object));
+            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository<object>(null!, _serviceScopeFactory.Object, _logger.Object));
             Assert.That(ex!.ParamName, Is.EqualTo("clientFactory"));
         }
 
         [Test]
         public void Constructor_ThrowsArgumentNullException_WhenOptionsRepositoryIsNull()
         {
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository(_clientFactory.Object, null!, _logger.Object));
+            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository<object>(_clientFactory.Object, null!, _logger.Object));
             Assert.That(ex!.ParamName, Is.EqualTo("scopeFactory"));
 
         }
@@ -83,7 +75,7 @@ namespace TSMoreland.Extensions.Http.Tests
         public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
         {
 
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository(_clientFactory.Object, _serviceScopeFactory.Object, null!));
+            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository<object>(_clientFactory.Object, _serviceScopeFactory.Object, null!));
             Assert.That(ex!.ParamName, Is.EqualTo("logger"));
 
         }
@@ -92,7 +84,7 @@ namespace TSMoreland.Extensions.Http.Tests
         public void Constructor_DoesNotThrow_WhenHttpClientFactoryContainsExpectedInternals()
         {
             var httpClientFactory = _serviceProvider.GetService<IHttpClientFactory>()!;
-            Assert.DoesNotThrow(() => _ = new HttpClientRepository(httpClientFactory, _serviceScopeFactory.Object, _logger.Object));
+            Assert.DoesNotThrow(() => _ = new HttpClientRepository<object>(httpClientFactory, _serviceScopeFactory.Object, _logger.Object));
         }
 
         [Test]
@@ -107,9 +99,40 @@ namespace TSMoreland.Extensions.Http.Tests
             Assert.DoesNotThrow(() => _ = _repository.CreateClient("bravo"));
         }
         [Test]
-        public void CreateClientWithOptions_DoesNotThrow_WhenNameNotFound()
+        public void CreateClientWithArgument_DoesNotThrow_WhenNameNotFound()
         {
-            Assert.DoesNotThrow(() => _ = _repository.CreateClient("bravo", new object()));
+            Assert.DoesNotThrow(() => _ = _repository.CreateClient("zulu", new object()));
+        }
+
+        [Test]
+        public void AddOrUpdate_ThrowsArgumentNullException_WhenNameIsNull()
+        {
+            var ex = Assert.Throws<ArgumentNullException>(() =>
+                _ = _repository.AddOrUpdate(null!, @object => new MockHttpMessageHandler<object>(@object)));
+            Assert.That(ex!.ParamName, Is.EqualTo("name"));
+        }
+
+        [Test]
+        public void AddOrUpdate_ThrowsArgumentNullException_WhenBuilderIsNull()
+        {
+            var ex = Assert.Throws<ArgumentNullException>(() =>
+                _ = _repository.AddOrUpdate("alpha", null!));
+            Assert.That(ex!.ParamName, Is.EqualTo("builder"));
+        }
+
+        [Test]
+        public void CreateClient_WithArgument_BuildsHandlerUsingArgument_WhenNamedClientExists()
+        {
+            const string argument = "beta";
+            Mock<BuildHttpMessageHandler<object>> builder = new();
+            builder
+                .Setup(b => b.Invoke(argument))
+                .Returns(new MockHttpMessageHandler<object>(argument));
+            _repository.AddOrUpdate("alpha", builder.Object);
+
+            _ = _repository.CreateClient("alpha", argument);
+
+            builder.Verify(b => b.Invoke(argument), Times.Once);
         }
     }
 }

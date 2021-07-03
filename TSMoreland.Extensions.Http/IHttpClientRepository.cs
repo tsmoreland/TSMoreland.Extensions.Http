@@ -16,6 +16,8 @@ using System.Net.Http;
 
 namespace TSMoreland.Extensions.Http
 {
+    public delegate HttpMessageHandler BuildHttpMessageHandler<in T>(T argument);
+
     /// <summary>
     /// <para>
     /// Extended version of <see cref="IHttpClientFactory"/> based heavily on
@@ -28,22 +30,23 @@ namespace TSMoreland.Extensions.Http
     /// this class allows them to be added, updated or removed at runtime.
     /// </para>
     /// </summary>
-    public interface IHttpClientRepository : IHttpClientFactory
+    public interface IHttpClientRepository<T> : IHttpClientFactory
     {
         /// <summary>
         /// 
         /// </summary>
         /// <param name="name"></param>
-        /// <param name="options"></param>
+        /// <param name="argument"></param>
         /// <returns></returns>
-        public HttpClient CreateClient(string name, object options);
+        public HttpClient CreateClient(string name, T argument);
 
         /// <summary>
         /// 
         /// </summary>
         /// <param name="name"></param>
         /// <param name="builder"></param>
-        public void AddOrUpdate(string name, Func<object, HttpMessageHandler> builder);
+        /// <returns></returns>
+        public BuildHttpMessageHandler<T> AddOrUpdate(string name, BuildHttpMessageHandler<T> builder);
 
         /// <summary>
         /// 
