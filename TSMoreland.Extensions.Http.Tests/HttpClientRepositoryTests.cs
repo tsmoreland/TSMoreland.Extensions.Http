@@ -89,14 +89,6 @@ namespace TSMoreland.Extensions.Http.Tests
         }
 
         [Test]
-        public void Constructor_ThrowsArgumentException_WhenHttpClientFactoryDoesNotContainExpectedInternals()
-        {
-            var ex = Assert.Throws<ArgumentException>(() =>
-                _ = new HttpClientRepository(_clientFactory.Object, _serviceScopeFactory.Object, _logger.Object));
-            Assert.That(ex!.ParamName, Is.EqualTo("clientFactory"));
-        }
-
-        [Test]
         public void Constructor_DoesNotThrow_WhenHttpClientFactoryContainsExpectedInternals()
         {
             var httpClientFactory = _serviceProvider.GetService<IHttpClientFactory>()!;
