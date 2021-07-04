@@ -195,6 +195,22 @@ namespace TSMoreland.Extensions.Http.Tests
             Assert.That(_repository.TryRemoveClient("alpha"), Is.True);
         }
 
+        /*
+        [Test]
+        public void TryRemoveClient_RemvoesActiveHandlerButNotExpiry_WhenNamedClientCreated()
+        {
+            _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            var client = _repository.CreateClient("alpha", new object());
+            _repository.TryRemoveClient("alpha");
+
+            Assert.That(_repository._activeHandlers.Count, Is.Zero);
+            Assert.That(_repository._expiredHandlers.Count, Is.Not.Zero);
+
+
+            GC.KeepAlive(client);
+        }
+        */
+
         [Test]
         public void CreateClient_WithArgument_BuildsHandlerUsingArgument_WhenNamedClientBuilderReturnsHandler()
         {
