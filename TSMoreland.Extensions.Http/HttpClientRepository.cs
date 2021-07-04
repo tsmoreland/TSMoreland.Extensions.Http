@@ -15,7 +15,6 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net.Http;
 using System.Threading;
@@ -42,6 +41,7 @@ namespace TSMoreland.Extensions.Http
     {
         private static readonly TimerCallback _cleanupCallback = (s) => ((HttpClientRepository<T>)s).CleanupTimer_Tick();
         private readonly IHttpClientFactory _clientFactory;
+        private readonly IHttpMessageHandlerFactory _messageHandlerFactory;
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<HttpClientRepository<T>> _logger;
 
@@ -84,14 +84,17 @@ namespace TSMoreland.Extensions.Http
         /// Instantiates a new instance of the <see cref="HttpClientRepository{T}"/> class.
         /// </summary>
         /// <param name="clientFactory">fallback <see cref="IHttpClientFactory"/> used if name is not recognized by the repository</param>
+        /// <param name="messageHandlerFactory">fallback <see cref="IHttpMessageHandlerFactory"/> used if name is not recognized by the repository</param>
         /// <param name="scopeFactory">scope factory used when creating tracking entries to managed life time of client and it's dependencies</param>
         /// <param name="logger"><see cref="ILogger"/> instance for diagnostic information</param>
         public HttpClientRepository(
             IHttpClientFactory clientFactory, 
+            IHttpMessageHandlerFactory messageHandlerFactory,
             IServiceScopeFactory scopeFactory,
             ILogger<HttpClientRepository<T>> logger)
         {
             _clientFactory = clientFactory ?? throw new ArgumentNullException(nameof(clientFactory));
+            _messageHandlerFactory = messageHandlerFactory ?? throw new ArgumentNullException(nameof(messageHandlerFactory));
             _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -121,6 +124,12 @@ namespace TSMoreland.Extensions.Http
                 throw new ArgumentNullException(nameof(name));
             }
 
+            if (!_messageHandlerBuildersByName.ContainsKey(name))
+            {
+                _logger.LogWarning($"{name} not found in message handler builders, using HttpClientFactory to construct client");
+                return _clientFactory.CreateClient(name);
+            }
+
             var handler = CreateHandler(name, argument);
             return handler == null 
                 ? _clientFactory.CreateClient(name) 
@@ -131,21 +140,18 @@ namespace TSMoreland.Extensions.Http
         {
             Guard.Against.ArgumentNull(name, nameof(name));
 
-            var handler = TryBuildActiveHandlerTrackingEntry(name, argument);
-            if (handler.Value == null)
+            if (!_messageHandlerBuildersByName.ContainsKey(name))
             {
-                // method doesn't seem to be available through direct access but is thread-safe and accessible through interface
-                ((IDictionary<string, Lazy<ActiveHandlerTrackingEntry?>>) _activeHandlers)
-                    .Remove(new KeyValuePair<string, Lazy<ActiveHandlerTrackingEntry?>>(name, handler));
-
-                return null;
+                _logger.LogWarning($"{name} not found in message handler builders, using HttpMessageHandlerFactory to construct client");
+                return _messageHandlerFactory.CreateHandler(name);
             }
 
-            var entry = _activeHandlers.GetOrAdd(name, handler!).Value;
+            var handler = BuildActiveHandlerTrackingEntry(name, argument);
+            var entry = _activeHandlers.GetOrAdd(name, handler).Value;
             StartHandlerEntryTimer(entry);
             return entry.Handler;
 
-            Lazy<ActiveHandlerTrackingEntry?> TryBuildActiveHandlerTrackingEntry(string localName, T localOptions)
+            Lazy<ActiveHandlerTrackingEntry> BuildActiveHandlerTrackingEntry(string localName, T localOptions)
             {
                 return new(() => CreateHandlerEntry(localName, localOptions), LazyThreadSafetyMode.ExecutionAndPublication);
             }
@@ -184,7 +190,7 @@ namespace TSMoreland.Extensions.Http
         /// https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L136
         /// internal for testing
         /// </remarks>
-        internal ActiveHandlerTrackingEntry? CreateHandlerEntry(string name, T argument)
+        internal ActiveHandlerTrackingEntry CreateHandlerEntry(string name, T argument)
         {
             IServiceScope? scope = null;
             try
@@ -193,21 +199,26 @@ namespace TSMoreland.Extensions.Http
 
                 if (!_messageHandlerBuildersByName.TryGetValue(name, out var builder))
                 {
-                    return null;
+                    // constructing with an argument but don't have a builder that can use it, if we get here it's due to race condition
+                    _logger.LogWarning("Constructing HttpClient from repository using IHttpMessageHandlerFactory fallback");
+                    var handler = new LifetimeTrackingProxiedHttpMessageHandler(_messageHandlerFactory.CreateHandler(name));
+                    return new ActiveHandlerTrackingEntry(name, handler, scope, TimeSpan.FromMinutes(2));
                 }
+                else
+                {
+                    // Wrap the handler so we can ensure the inner handler outlives the outer handler.
+                    var handler = new LifetimeTrackingProxiedHttpMessageHandler(builder(argument));
 
-                // Wrap the handler so we can ensure the inner handler outlives the outer handler.
-                var handler = new LifetimeTrackingProxiedHttpMessageHandler(builder(argument));
-
-                // Note that we can't start the timer here. That would introduce a very very subtle race condition
-                // with very short expiry times. We need to wait until we've actually handed out the handler once
-                // to start the timer.
-                //
-                // Otherwise it would be possible that we start the timer here, immediately expire it (very short
-                // timer) and then dispose it without ever creating a client. That would be bad. It's unlikely
-                // this would happen, but we want to be sure.
-                // lifetime hard coded to 2 minutes, eventually this may come from the object passed in
-                return new ActiveHandlerTrackingEntry(name, handler, scope, TimeSpan.FromMinutes(2));
+                    // Note that we can't start the timer here. That would introduce a very very subtle race condition
+                    // with very short expiry times. We need to wait until we've actually handed out the handler once
+                    // to start the timer.
+                    //
+                    // Otherwise it would be possible that we start the timer here, immediately expire it (very short
+                    // timer) and then dispose it without ever creating a client. That would be bad. It's unlikely
+                    // this would happen, but we want to be sure.
+                    // lifetime hard coded to 2 minutes, eventually this may come from the object passed in
+                    return new ActiveHandlerTrackingEntry(name, handler, scope, TimeSpan.FromMinutes(2));
+                }
             }
             catch
             {

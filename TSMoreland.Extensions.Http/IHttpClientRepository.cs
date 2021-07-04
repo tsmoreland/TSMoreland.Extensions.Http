@@ -16,6 +16,7 @@ using System.Net.Http;
 
 namespace TSMoreland.Extensions.Http
 {
+    public delegate bool UseArgumentWhenBuildingClient<in T>(T argument);
     public delegate HttpMessageHandler BuildHttpMessageHandler<in T>(T argument);
 
     /// <summary>

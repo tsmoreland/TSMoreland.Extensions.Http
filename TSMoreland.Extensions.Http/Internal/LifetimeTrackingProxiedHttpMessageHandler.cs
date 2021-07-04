@@ -3,7 +3,7 @@
 
 using System.Net.Http;
 
-namespace TSMoreland.Extensions.Http
+namespace TSMoreland.Extensions.Http.Internal
 {
     /// <summary>
     /// share a reference to an instance of this class, and when it goes out of scope the inner handler 
