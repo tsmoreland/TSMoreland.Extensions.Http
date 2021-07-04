@@ -28,7 +28,9 @@ namespace TSMoreland.Extensions.Http
     /// <summary>
     /// <para>
     /// Extended version of <see cref="IHttpClientFactory"/> based heavily on
-    /// https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs
+    /// <a href="https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs">
+    /// DefaultHttpClientFactory.cs
+    /// </a>
     /// </para>
     /// <para>
     /// Intention is to provide repository like behaviour for <see cref="IHttpClientFactory"/> by allow
@@ -161,7 +163,7 @@ namespace TSMoreland.Extensions.Http
         /// <inheritdoc/>
         public BuildHttpMessageHandler<T> AddOrUpdate(string name, BuildHttpMessageHandler<T> builder)
         {
-            Guard.Against.ArgumentNull(name, nameof(name));
+            Guard.Against.ArgumentNullOrEmpty(name, nameof(name));
             Guard.Against.ArgumentNull(builder, nameof(builder));
 
             _logger.LogDebug($"Adding or updating {name} message handler builder");
@@ -172,7 +174,7 @@ namespace TSMoreland.Extensions.Http
         /// <inheritdoc/>
         public bool TryRemoveClient(string name)
         {
-            Guard.Against.ArgumentNull(name, nameof(name));
+            Guard.Against.ArgumentNullOrEmpty(name, nameof(name));
 
             if (!_messageHandlerBuildersByName.TryRemove(name, out _))
             {
@@ -186,9 +188,20 @@ namespace TSMoreland.Extensions.Http
         }
 
         /// <remarks>
+        /// <para>
         /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
-        /// https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L136
+        /// <a href="https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L136">
+        /// DefaultHttpClientFactory.cs line 136
+        /// </a>
+        /// 
+        /// </para>
+        /// <para>
+        /// updated to build messsage handler via builder method matching <paramref name="name"/>
+        /// if no such entries is found then fallback to using <see cref="IHttpMessageHandlerFactory"/>
+        /// </para>
+        /// <para>
         /// internal for testing
+        /// </para>
         /// </remarks>
         internal ActiveHandlerTrackingEntry CreateHandlerEntry(string name, T argument)
         {
@@ -228,10 +241,22 @@ namespace TSMoreland.Extensions.Http
             }
         }
 
-        /// <remarks>
-        /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
-        /// https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L207
+        /// <summary>
         /// internal for testing
+        /// </summary>
+        internal ConcurrentDictionary<string, BuildHttpMessageHandler<T>> MessageHandlersByName =>
+            _messageHandlerBuildersByName;
+
+        /// <remarks>
+        /// <para>
+        /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
+        /// <a href="https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L207">
+        /// DefaultHttpClientFactory.cs line 207
+        /// </a>
+        /// </para>
+        /// <para>
+        /// internal for testing
+        /// </para>
         /// </remarks>
         internal void ExpiryTimer_Tick(object state)
         {
@@ -265,9 +290,15 @@ namespace TSMoreland.Extensions.Http
         }
 
         /// <remarks>
+        /// <para>
         /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
-        /// https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L232
+        /// <a href="https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L232">
+        /// DefaultHttpClientFactory.cs line 232
+        /// </a>
+        /// </para>
+        /// <para>
         /// Internal so it can be overridden in tests
+        /// </para>
         /// </remarks>
         internal void StartHandlerEntryTimer(ActiveHandlerTrackingEntry entry)
         {
@@ -275,8 +306,15 @@ namespace TSMoreland.Extensions.Http
         }
 
         /// <remarks>
+        /// <para>
         /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
-        /// https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L238
+        /// <a href="https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L238">
+        /// DefaultHttpClientFactory.cs line 238
+        /// </a>
+        /// </para>
+        /// <para>
+        /// internal for testing
+        /// </para>
         /// </remarks>
         internal void StartCleanupTimer()
         {
@@ -287,9 +325,15 @@ namespace TSMoreland.Extensions.Http
         }
 
         /// <remarks>
+        /// <para>
         /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
-        /// https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L250
+        /// <a href="https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L250">
+        /// DefaultHttpClientFactory.cs line 250
+        /// </a>
+        /// </para>
+        /// <para>
         /// internal for testing
+        /// </para>
         /// </remarks>
         internal void StopCleanupTimer()
         {
@@ -301,9 +345,15 @@ namespace TSMoreland.Extensions.Http
         }
 
         /// <remarks>
+        /// <para>
         /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
-        /// https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L260
+        /// <a href="https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L260">
+        /// DefaultHttpClientFactory.cs line 260
+        /// </a>
+        /// </para>
+        /// <para>
         /// internal for testing
+        /// </para>
         /// </remarks>
         internal void CleanupTimer_Tick()
         {

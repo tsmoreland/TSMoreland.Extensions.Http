@@ -11,7 +11,6 @@
 // WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
 
-using System;
 using System.Net.Http;
 
 namespace TSMoreland.Extensions.Http
@@ -22,7 +21,9 @@ namespace TSMoreland.Extensions.Http
     /// <summary>
     /// <para>
     /// Extended version of <see cref="IHttpClientFactory"/> based heavily on
-    /// https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs
+    /// <a href="https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs">
+    /// DefaultHttpClientFactory.cs
+    /// </a>
     /// </para>
     /// <para>
     /// Intention is to provide repository like behaviour for <see cref="IHttpClientFactory"/> by allow

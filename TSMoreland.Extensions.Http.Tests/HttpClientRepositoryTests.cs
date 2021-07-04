@@ -12,79 +12,98 @@
 // 
 
 using System;
+using System.Linq;
 using System.Net.Http;
+using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http.Logging;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
+using TSMoreland.Extensions.Http.Internal;
 
 namespace TSMoreland.Extensions.Http.Tests
 {
     [TestFixture]
     public class HttpClientRepositoryTests
     {
-        private IServiceProvider _serviceProvider = null!;
         private Mock<ILogger<HttpClientRepository<object>>> _logger = null!;
         private Mock<IServiceScopeFactory> _serviceScopeFactory = null!;
         private Mock<IServiceScope> _serviceScope = null!;
         private Mock<IHttpClientFactory> _clientFactory = null!;
+        private Mock<IHttpMessageHandlerFactory> _messageHandlerFactory = null!;
+        private HttpClient _createdClient = null!;
+        private Mock<HttpMessageHandler> _messageHandler = null!;
 
         private HttpClientRepository<object> _repository = null!;
 
         [SetUp]
         public void Setup()
         {
-            var serviceCollection = new ServiceCollection();
-            serviceCollection.AddHttpClient();
-
-            serviceCollection
-                .AddHttpClient("zulu")
-                .AddHttpMessageHandler(() => new LoggingHttpMessageHandler(_logger.Object));
-
-            _serviceProvider = serviceCollection.BuildServiceProvider();
-
-
             _logger = new Mock<ILogger<HttpClientRepository<object>>>();
+
+            _messageHandler = new Mock<HttpMessageHandler>();
+            _createdClient = new HttpClient(_messageHandler.Object);
             _clientFactory = new Mock<IHttpClientFactory>();
+            _clientFactory
+                .Setup(factory => factory.CreateClient(It.IsAny<string>()))
+                .Returns(_createdClient);
+
+            _messageHandlerFactory = new Mock<IHttpMessageHandlerFactory>();
+            _messageHandlerFactory
+                .Setup(factory => factory.CreateHandler(It.IsAny<string>()))
+                .Returns(_messageHandler.Object);
+
             _serviceScope = new Mock<IServiceScope>();
             _serviceScopeFactory = new Mock<IServiceScopeFactory>();
             _serviceScopeFactory
                 .Setup(f => f.CreateScope())
                 .Returns(_serviceScope.Object);
 
-            _repository = new HttpClientRepository<object>(_serviceProvider.GetService<IHttpClientFactory>()!, _serviceScopeFactory.Object, _logger.Object);
+            _repository = new HttpClientRepository<object>(
+                _clientFactory.Object,
+                _messageHandlerFactory.Object,
+                _serviceScopeFactory.Object, 
+                _logger.Object);
+        }
+
+        [TearDown]
+        public void TearDown()
+        {
+            _createdClient.Dispose(); // disposes the handler as well
         }
 
         [Test]
         public void Constructor_ThrowsArgumentNullException_WhenHttpClientFactoryIsNull()
         {
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository<object>(null!, _serviceScopeFactory.Object, _logger.Object));
+            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository<object>(null!, _messageHandlerFactory.Object, _serviceScopeFactory.Object, _logger.Object));
             Assert.That(ex!.ParamName, Is.EqualTo("clientFactory"));
+        }
+
+        [Test]
+        public void Constructor_ThrowsArgumentNullException_WhenHttpMessageHandlerFactoryIsNull()
+        {
+            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository<object>(_clientFactory.Object, null!, _serviceScopeFactory.Object, _logger.Object));
+            Assert.That(ex!.ParamName, Is.EqualTo("messageHandlerFactory"));
         }
 
         [Test]
         public void Constructor_ThrowsArgumentNullException_WhenOptionsRepositoryIsNull()
         {
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository<object>(_clientFactory.Object, null!, _logger.Object));
+            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository<object>(_clientFactory.Object, _messageHandlerFactory.Object, null!, _logger.Object));
             Assert.That(ex!.ParamName, Is.EqualTo("scopeFactory"));
-
         }
 
         [Test]
         public void Constructor_ThrowsArgumentNullException_WhenLoggerIsNull()
         {
-
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository<object>(_clientFactory.Object, _serviceScopeFactory.Object, null!));
+            var ex = Assert.Throws<ArgumentNullException>(() => _ = new HttpClientRepository<object>(_clientFactory.Object, _messageHandlerFactory.Object, _serviceScopeFactory.Object, null!));
             Assert.That(ex!.ParamName, Is.EqualTo("logger"));
-
         }
 
         [Test]
         public void Constructor_DoesNotThrow_WhenHttpClientFactoryContainsExpectedInternals()
         {
-            var httpClientFactory = _serviceProvider.GetService<IHttpClientFactory>()!;
-            Assert.DoesNotThrow(() => _ = new HttpClientRepository<object>(httpClientFactory, _serviceScopeFactory.Object, _logger.Object));
+            Assert.DoesNotThrow(() => _ = new HttpClientRepository<object>(_clientFactory.Object, _messageHandlerFactory.Object, _serviceScopeFactory.Object, _logger.Object));
         }
 
         [Test]
@@ -113,6 +132,35 @@ namespace TSMoreland.Extensions.Http.Tests
         }
 
         [Test]
+        public void AddOrUpdate_ThrowsArgumentException_WhenNameIsEmpty()
+        {
+            var ex = Assert.Throws<ArgumentNullException>(() => _repository.AddOrUpdate(null!, _ => _messageHandler.Object));
+            Assert.That(ex!.ParamName, Is.EqualTo("name"));
+        }
+
+        [Test]
+        public void AddOrUpdate_AddsHandler_WhenNameNotFound()
+        {
+            _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            Assert.That(_repository.MessageHandlersByName.ContainsKey("alpha"), Is.True);
+        }
+
+        [Test]
+        public void AddOrUpdate_UpdatesHandler_WhenNameFound()
+        {
+            _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            var expectedCount = _repository.MessageHandlersByName.Count;
+            _repository.MessageHandlersByName.TryGetValue("alpha", out var firstHandler);
+
+            _repository.AddOrUpdate("alpha", @object => new MockHttpMessageHandler<object>(@object));
+            _repository.MessageHandlersByName.TryGetValue("alpha", out var secondHandler);
+
+            Assert.That(_repository.MessageHandlersByName.Count, Is.EqualTo(expectedCount));
+            Assert.That(ReferenceEquals(firstHandler, secondHandler), Is.False);
+
+        }
+
+        [Test]
         public void AddOrUpdate_ThrowsArgumentNullException_WhenBuilderIsNull()
         {
             var ex = Assert.Throws<ArgumentNullException>(() =>
@@ -121,18 +169,74 @@ namespace TSMoreland.Extensions.Http.Tests
         }
 
         [Test]
-        public void CreateClient_WithArgument_BuildsHandlerUsingArgument_WhenNamedClientExists()
+        public void TryRemoveClient_ThrowsArgumentNullException_WhenNameIsNull()
+        {
+            var ex = Assert.Throws<ArgumentNullException>(() => _repository.TryRemoveClient(null!));
+            Assert.That(ex!.ParamName, Is.EqualTo("name"));
+        }
+
+        [Test]
+        public void TryRemoveClient_ThrowsArgumentException_WhenNameIsEmpty()
+        {
+            var ex = Assert.Throws<ArgumentException>(() => _repository.TryRemoveClient(""));
+            Assert.That(ex!.ParamName, Is.EqualTo("name"));
+        }
+
+        [Test]
+        public void TryRemoveClient_ReturnsFalse_WhenNameNotFound()
+        {
+            Assert.That(_repository.TryRemoveClient("alpha"), Is.False);
+        }
+
+        [Test]
+        public void TryRemoveClient_ReturnsTrue_WhenNameFound()
+        {
+            _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            Assert.That(_repository.TryRemoveClient("alpha"), Is.True);
+        }
+
+        [Test]
+        public void CreateClient_WithArgument_BuildsHandlerUsingArgument_WhenNamedClientBuilderReturnsHandler()
+        {
+            const string argument = "beta";
+            var expectedInnerHandler = new MockHttpMessageHandler<object>(argument);
+            Mock<BuildHttpMessageHandler<object>> builder = new();
+            builder
+                .Setup(b => b.Invoke(argument))
+                .Returns(expectedInnerHandler);
+            _repository.AddOrUpdate("alpha", builder.Object);
+
+            var client = _repository.CreateClient("alpha", argument);
+            var handler = GetInternalHandlerFromClientOrNull(client);
+
+            builder.Verify(b => b.Invoke(argument), Times.Once);
+            Assert.That(ReferenceEquals(handler, expectedInnerHandler), Is.True);
+        }
+
+        [Test]
+        public void CreateClient_WithArgument_ThrowsArgumentNullException_WhenNamedClientBuilderReturnsNull()
         {
             const string argument = "beta";
             Mock<BuildHttpMessageHandler<object>> builder = new();
             builder
                 .Setup(b => b.Invoke(argument))
-                .Returns(new MockHttpMessageHandler<object>(argument));
+                .Returns((MockHttpMessageHandler<object>) null!);
             _repository.AddOrUpdate("alpha", builder.Object);
+            Assert.Throws<ArgumentNullException>(() => _ = _repository.CreateClient("alpha", argument));
+        }
 
-            _ = _repository.CreateClient("alpha", argument);
+        private static HttpMessageHandler? GetInternalHandlerFromClientOrNull(HttpClient client)
+        {
+            var handler = typeof(HttpMessageInvoker)
+                .GetFields(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.FlattenHierarchy)
+                .Where(f => string.Equals("_handler", f.Name, StringComparison.Ordinal))
+                .Select(f => f.GetValue(client))
+                .OfType<HttpMessageHandler?>()
+                .FirstOrDefault();
 
-            builder.Verify(b => b.Invoke(argument), Times.Once);
+            return handler is LifetimeTrackingProxiedHttpMessageHandler proxiedHandler
+                ? proxiedHandler.InnerHandler
+                : handler;
         }
     }
 }
