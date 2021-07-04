@@ -15,7 +15,28 @@ using System.Net.Http;
 
 namespace TSMoreland.Extensions.Http
 {
+    /// <summary>
+    /// Determines if the repository should be used to create the <see cref="HttpClient"/> instance with
+    /// <paramref name="argument"/> or if <see cref="IHttpClientFactory.CreateClient(string)"/> should be
+    /// used instead
+    /// </summary>
+    /// <typeparam name="T">argument type, must match <see cref="IHttpClientRepository{T}"/></typeparam>
+    /// <param name="argument">argument used to determine how <see cref="HttpClient"/> should be created</param>
+    /// <returns>
+    /// <see langword="true" /> if <see cref="IHttpClientRepository{T}"/> should be used; otherwise
+    /// <see cref="IHttpClientFactory"/> 
+    /// </returns>
     public delegate bool UseArgumentWhenBuildingClient<in T>(T argument);
+
+    /// <summary>
+    /// Builder function use to create and configure a <see cref="HttpMessageHandler"/> using any
+    /// <paramref name="argument"/> to configure 
+    /// </summary>
+    /// <typeparam name="T">argument type, must match <see cref="IHttpClientRepository{T}"/></typeparam>
+    /// <param name="argument">argument used to determine how <see cref="HttpMessageHandler"/> should be created</param>
+    /// <returns>
+    /// new instance of <see cref="HttpMessageHandler"/> configured using <paramref name="argument"/>
+    /// </returns>
     public delegate HttpMessageHandler BuildHttpMessageHandler<in T>(T argument);
 
     /// <summary>
@@ -35,26 +56,64 @@ namespace TSMoreland.Extensions.Http
     public interface IHttpClientRepository<T> : IHttpClientFactory
     {
         /// <summary>
-        /// 
+        /// Creates and configures an <see cref="HttpClient"/> instance using the configuration that corresponds
+        /// to the logical name specified by <paramref name="name"/>.
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="argument"></param>
-        /// <returns></returns>
+        /// <param name="name">The logical name of the client to create.</param>
+        /// <param name="argument">
+        /// argument used to create client if name is recognized wihtin the
+        /// <see cref="IHttpClientRepository{T}"/>
+        /// </param>
+        /// <returns>A new <see cref="HttpClient"/> instance.</returns>
+        /// <remarks>
+        /// <para>
+        /// Each call to <see cref="CreateClient(string, T)"/> is guaranteed to return a new <see cref="HttpClient"/>
+        /// instance. It is generally not necessary to dispose of the <see cref="HttpClient"/> as the
+        /// <see cref="IHttpClientRepository{T}"/> tracks and disposes resources used by the <see cref="HttpClient"/>.
+        /// </para>
+        /// <para>
+        /// Callers are also free to mutate the returned <see cref="HttpClient"/> instance's public properties
+        /// as desired.
+        /// </para>
+        /// <para>
+        /// if <paramref name="name"/> is not recognized by the <see cref="IHttpClientRepository{T}"/>
+        /// then creation will be handled by an inner <see cref="IHttpClientFactory"/> using
+        /// <see cref="IHttpClientFactory.CreateClient(string)"/>
+        /// </para>
+        /// </remarks>
+        /// <exception cref="System.ArgumentNullException">if <paramref name="name"/> is <see langword="null" /></exception>
+        /// <exception cref="System.ArgumentException">if <paramref name="name"/> is empty</exception>
         public HttpClient CreateClient(string name, T argument);
 
         /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="name"></param>
-        /// <param name="builder"></param>
-        /// <returns></returns>
+        /// Uses the specified functions to add a key/value pair to the
+        /// <see cref="IHttpClientRepository{T}" /> if the name does not already exist,
+        /// or to update a key/value pair in the <see cref="IHttpClientRepository{T}" />
+        /// if the name already exists.</summary>
+        /// <param name="name">The name to be added or whose value should be updated</param>
+        /// <param name="builder">The function used to generate a value for an absent key</param>
+        /// <exception cref="T:System.ArgumentNullException">
+        /// <paramref name="name" />, <paramref name="builder" />, is <see langword="null" />.</exception>
+        /// <exception cref="T:System.OverflowException">The dictionary contains too many elements.</exception>
+        /// <returns>
+        /// The new value for the key. This will be be the result of
+        /// <paramref name="builder" />
+        /// </returns>
         public BuildHttpMessageHandler<T> AddOrUpdate(string name, BuildHttpMessageHandler<T> builder);
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
+    /// <summary>
+    /// Attempts to remove and return the value that has the specified key from the
+    /// <see cref="IHttpClientRepository{T}" />.
+    /// </summary>
+    /// <param name="name">The name of the element to remove.</param>
+    /// <exception cref="T:System.ArgumentNullException">
+    /// <paramref name="name" /> is  <see langword="null" />.
+    /// </exception>
+    /// <exception cref="T:System.ArgumentException">
+    /// <paramref name="name" /> is  empty.
+    /// </exception>
+    /// <returns>
+    /// <see langword="true" /> if the object was removed successfully; otherwise, <see langword="false" />.</returns>
         public bool TryRemoveClient(string name);
     }
 }
