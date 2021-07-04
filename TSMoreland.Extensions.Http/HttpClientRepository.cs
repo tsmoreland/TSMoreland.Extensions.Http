@@ -83,6 +83,11 @@ namespace TSMoreland.Extensions.Http
         private readonly TimerCallback _expiryCallback;
 
         /// <summary>
+        /// internal for tests
+        /// </summary>
+        internal TimeSpan? _activeHandlerLifetime;
+
+        /// <summary>
         /// Instantiates a new instance of the <see cref="HttpClientRepository{T}"/> class.
         /// </summary>
         /// <param name="clientFactory">fallback <see cref="IHttpClientFactory"/> used if name is not recognized by the repository</param>
@@ -132,32 +137,7 @@ namespace TSMoreland.Extensions.Http
                 return _clientFactory.CreateClient(name);
             }
 
-            var handler = CreateHandler(name, argument);
-            return handler == null 
-                ? _clientFactory.CreateClient(name) 
-                : new HttpClient(handler, disposeHandler: false);
-        }
-
-        public HttpMessageHandler? CreateHandler(string name, T argument)
-        {
-            Guard.Against.ArgumentNull(name, nameof(name));
-
-            if (!_messageHandlerBuildersByName.ContainsKey(name))
-            {
-                _logger.LogWarning($"{name} not found in message handler builders, using HttpMessageHandlerFactory to construct client");
-                return _messageHandlerFactory.CreateHandler(name);
-            }
-
-            var handler = BuildActiveHandlerTrackingEntry(name, argument);
-            var entry = _activeHandlers.GetOrAdd(name, handler).Value;
-            StartHandlerEntryTimer(entry);
-            return entry.Handler;
-
-            Lazy<ActiveHandlerTrackingEntry> BuildActiveHandlerTrackingEntry(string localName, T localOptions)
-            {
-                return new(() => CreateHandlerEntry(localName, localOptions), LazyThreadSafetyMode.ExecutionAndPublication);
-            }
-
+            return new HttpClient(CreateHandler(name, argument), disposeHandler: false);
         }
 
         /// <inheritdoc/>
@@ -187,6 +167,29 @@ namespace TSMoreland.Extensions.Http
             return true;
         }
 
+        private HttpMessageHandler CreateHandler(string name, T argument)
+        {
+            Guard.Against.ArgumentNull(name, nameof(name));
+
+            if (!_messageHandlerBuildersByName.ContainsKey(name))
+            {
+                _logger.LogWarning($"{name} not found in message handler builders, using HttpMessageHandlerFactory to construct client");
+                return _messageHandlerFactory.CreateHandler(name);
+            }
+
+            var handler = BuildActiveHandlerTrackingEntry(name, argument);
+            var entry = _activeHandlers.GetOrAdd(name, handler).Value;
+            StartHandlerEntryTimer(entry);
+            return entry.Handler;
+
+            Lazy<ActiveHandlerTrackingEntry> BuildActiveHandlerTrackingEntry(string localName, T localOptions)
+            {
+                return new(() => CreateHandlerEntry(localName, localOptions), LazyThreadSafetyMode.ExecutionAndPublication);
+            }
+
+        }
+
+
         /// <remarks>
         /// <para>
         /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
@@ -215,7 +218,7 @@ namespace TSMoreland.Extensions.Http
                     // constructing with an argument but don't have a builder that can use it, if we get here it's due to race condition
                     _logger.LogWarning("Constructing HttpClient from repository using IHttpMessageHandlerFactory fallback");
                     var handler = new LifetimeTrackingProxiedHttpMessageHandler(_messageHandlerFactory.CreateHandler(name));
-                    return new ActiveHandlerTrackingEntry(name, handler, scope, TimeSpan.FromMinutes(2));
+                    return new ActiveHandlerTrackingEntry(name, handler, scope, _activeHandlerLifetime ?? TimeSpan.FromMinutes(2));
                 }
                 else
                 {
@@ -230,7 +233,7 @@ namespace TSMoreland.Extensions.Http
                     // timer) and then dispose it without ever creating a client. That would be bad. It's unlikely
                     // this would happen, but we want to be sure.
                     // lifetime hard coded to 2 minutes, eventually this may come from the object passed in
-                    return new ActiveHandlerTrackingEntry(name, handler, scope, TimeSpan.FromMinutes(2));
+                    return new ActiveHandlerTrackingEntry(name, handler, scope, _activeHandlerLifetime ?? TimeSpan.FromMinutes(2));
                 }
             }
             catch
@@ -269,8 +272,7 @@ namespace TSMoreland.Extensions.Http
             {
                 _logger.LogWarning("Active Handler not found during expiry, this may be due to its forceful removal due to change in settings");
             }
-
-            if (!ReferenceEquals(active, found.Value))
+            else if (!ReferenceEquals(active, found.Value))
             {
                 _logger.LogWarning("Entry found but value did not match, value will be re-added - if the same engine is updated too rapidly " +
                                    "this may result in a race condition leaving us with out of date handler value");

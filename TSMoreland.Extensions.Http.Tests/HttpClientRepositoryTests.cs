@@ -15,6 +15,7 @@ using System;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -195,21 +196,32 @@ namespace TSMoreland.Extensions.Http.Tests
             Assert.That(_repository.TryRemoveClient("alpha"), Is.True);
         }
 
-        /*
         [Test]
-        public void TryRemoveClient_RemvoesActiveHandlerButNotExpiry_WhenNamedClientCreated()
+        public void TryRemoveClient_RemovesActiveHandler_WhenNamedClientCreated()
         {
             _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            _repository._activeHandlerLifetime = TimeSpan.FromSeconds(1);
             var client = _repository.CreateClient("alpha", new object());
             _repository.TryRemoveClient("alpha");
 
             Assert.That(_repository._activeHandlers.Count, Is.Zero);
+            GC.KeepAlive(client); // don't want GC disposing too early and impacting on the test
+        }
+
+        [Test]
+        public void TryRemoveClient_ClientAddedToExpiryQueue_WhenNamedClientCreated()
+        {
+            _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            _repository._activeHandlerLifetime = TimeSpan.FromSeconds(1);
+            var client = _repository.CreateClient("alpha", new object());
+            _repository.TryRemoveClient("alpha");
+
+            Thread.Sleep(TimeSpan.FromSeconds(1.1));
             Assert.That(_repository._expiredHandlers.Count, Is.Not.Zero);
 
 
-            GC.KeepAlive(client);
+            GC.KeepAlive(client); // don't want GC disposing too early and impacting on the test
         }
-        */
 
         [Test]
         public void CreateClient_WithArgument_BuildsHandlerUsingArgument_WhenNamedClientBuilderReturnsHandler()
