@@ -140,6 +140,15 @@ namespace TSMoreland.Extensions.Http
             return new HttpClient(CreateHandler(name, argument), disposeHandler: false);
         }
 
+
+
+        /// <inheritdoc/>
+        public bool ContainsName(string name)
+        {
+            Guard.Against.ArgumentNullOrEmpty(name, nameof(name));
+            return _messageHandlerBuildersByName.ContainsKey(name);
+        }
+
         /// <inheritdoc/>
         public BuildHttpMessageHandler<T> AddOrUpdate(string name, BuildHttpMessageHandler<T> builder)
         {

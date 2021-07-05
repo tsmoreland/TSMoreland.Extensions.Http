@@ -101,19 +101,35 @@ namespace TSMoreland.Extensions.Http
         /// </returns>
         public BuildHttpMessageHandler<T> AddOrUpdate(string name, BuildHttpMessageHandler<T> builder);
 
-    /// <summary>
-    /// Attempts to remove and return the value that has the specified key from the
-    /// <see cref="IHttpClientRepository{T}" />.
-    /// </summary>
-    /// <param name="name">The name of the element to remove.</param>
-    /// <exception cref="T:System.ArgumentNullException">
-    /// <paramref name="name" /> is  <see langword="null" />.
-    /// </exception>
-    /// <exception cref="T:System.ArgumentException">
-    /// <paramref name="name" /> is  empty.
-    /// </exception>
-    /// <returns>
-    /// <see langword="true" /> if the object was removed successfully; otherwise, <see langword="false" />.</returns>
+        /// <summary>
+        /// Determines whether the <see cref="IHttpClientRepository{T}" /> contains the specified name.
+        /// </summary>
+        /// <param name="name">The name to locate in the <see cref="IHttpClientRepository{T}" />.</param>
+        /// <exception cref="T:System.ArgumentNullException">
+        /// <paramref name="name" /> is <see langword="null" />.
+        /// </exception>
+        /// <exception cref="T:System.ArgumentException">
+        /// <paramref name="name" /> is empty.
+        /// </exception>
+        /// <returns>
+        /// <see langword="true" /> if the <see cref="IHttpClientRepository{T}" /> contains an element with the specified name;
+        /// otherwise, <see langword="false" />.
+        /// </returns>
+        public bool ContainsName(string name);
+
+        /// <summary>
+        /// Attempts to remove and return the value that has the specified key from the
+        /// <see cref="IHttpClientRepository{T}" />.
+        /// </summary>
+        /// <param name="name">The name of the element to remove.</param>
+        /// <exception cref="T:System.ArgumentNullException">
+        /// <paramref name="name" /> is  <see langword="null" />.
+        /// </exception>
+        /// <exception cref="T:System.ArgumentException">
+        /// <paramref name="name" /> is  empty.
+        /// </exception>
+        /// <returns>
+        /// <see langword="true" /> if the object was removed successfully; otherwise, <see langword="false" />.</returns>
         public bool TryRemoveClient(string name);
     }
 }
