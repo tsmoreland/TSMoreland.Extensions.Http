@@ -5,7 +5,13 @@
 
     <IsPackable>false</IsPackable>
     <nullable>enable</nullable>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\TSMoreland.Extensions.Http.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="..\TSMoreland.Extensions.Http.snk" Link="TSMoreland.Extensions.Http.snk" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="16.9.4" />

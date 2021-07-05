@@ -10,6 +10,8 @@
     <Copyright>Copyright © 2021 Terry Moreland</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <NeutralLanguage>en-US</NeutralLanguage>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>..\TSMoreland.Extensions.Http.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +19,7 @@
       <Pack>True</Pack>
       <PackagePath></PackagePath>
     </None>
+    <None Include="..\TSMoreland.Extensions.Http.snk" Link="TSMoreland.Extensions.Http.snk" />
   </ItemGroup>
 
   <ItemGroup>
