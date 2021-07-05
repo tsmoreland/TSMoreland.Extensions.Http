@@ -380,6 +380,43 @@ namespace TSMoreland.Extensions.Http.Tests
             Assert.That(repository._expiredHandlers.Count, Is.EqualTo(0));
         }
 
+        [Test]
+        public async Task CreateClient_ExpiredClientReAdds_WhenRemovedHandlerNotExpectedValue()
+        {
+            TimeSpan maxWaitTime = TimeSpan.FromSeconds(5);
+            var repository = new HttpClientRepository<object>(
+                _clientFactory.Object,
+                _messageHandlerFactory.Object,
+                _serviceScopeFactory.Object,
+                _logger.Object,
+                TimeSpan.FromMilliseconds(100)) 
+            {
+                _activeHandlerLifetime = TimeSpan.FromMilliseconds(100)
+            };
+            repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            _ = repository.CreateClient("alpha", new object());
+            repository.TryRemoveClient("alpha");
+
+            repository._activeHandlerLifetime = TimeSpan.FromMinutes(2);
+            repository.AddOrUpdate("alpha", @object => new MockHttpMessageHandler<object>(@object));
+            _ = repository.CreateClient("alpha", new object());
+
+            DateTime startTime = DateTime.UtcNow;
+            ;
+            while (repository._expiredHandlers.Count != 0 && (DateTime.UtcNow - startTime) < maxWaitTime)
+            {
+                GC.Collect();
+                await Task.Delay(1500);
+                GC.Collect();
+            }
+
+            // bit complicated but we have 2 clients, 1 was forcibly removed but still set to expire - when it expires
+            // it would attempt to remove the active handler by name - and succeed becuase of the second client
+            // upon checking the value of the removed object we see it's not the one we expected to remove - so we re-add it
+            // leaving us with a total of 1 active handlers
+            Assert.That(repository._activeHandlers.Count, Is.EqualTo(1));
+        }
+
         private static HttpMessageHandler? GetInternalHandlerFromClientOrNull(HttpClient client)
         {
             var handler = typeof(HttpMessageInvoker)
