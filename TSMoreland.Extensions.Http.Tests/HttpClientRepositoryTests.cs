@@ -12,10 +12,13 @@
 // 
 
 using System;
+using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
@@ -105,23 +108,6 @@ namespace TSMoreland.Extensions.Http.Tests
         public void Constructor_DoesNotThrow_WhenHttpClientFactoryContainsExpectedInternals()
         {
             Assert.DoesNotThrow(() => _ = new HttpClientRepository<object>(_clientFactory.Object, _messageHandlerFactory.Object, _serviceScopeFactory.Object, _logger.Object));
-        }
-
-        [Test]
-        public void TryRemove_ReturnsFalse_WhenNameNotFound()
-        {
-            Assert.That(_repository.TryRemoveClient("alpha"), Is.EqualTo(false));
-        }
-
-        [Test]
-        public void CreateClient_DoesNotThrow_WhenNameNotFound()
-        {
-            Assert.DoesNotThrow(() => _ = _repository.CreateClient("bravo"));
-        }
-        [Test]
-        public void CreateClientWithArgument_DoesNotThrow_WhenNameNotFound()
-        {
-            Assert.DoesNotThrow(() => _ = _repository.CreateClient("zulu", new object()));
         }
 
         [Test]
@@ -219,8 +205,33 @@ namespace TSMoreland.Extensions.Http.Tests
             Thread.Sleep(TimeSpan.FromSeconds(1.1));
             Assert.That(_repository._expiredHandlers.Count, Is.Not.Zero);
 
-
             GC.KeepAlive(client); // don't want GC disposing too early and impacting on the test
+        }
+
+        [Test]
+        public void CreateClient_DoesNotThrow_WhenNameNotFound()
+        {
+            Assert.DoesNotThrow(() => _ = _repository.CreateClient("bravo"));
+        }
+
+        [Test]
+        public void CreateClient_ReturnsClientBuildFromInnerFactory()
+        {
+            _ = _repository.CreateClient("alpha");
+            _clientFactory.Verify(f => f.CreateClient("alpha"), Times.Once);
+        }
+
+        [Test]
+        public void CreateClientWithArgument_ReturnsClientBuildFromInnerFactory_WhenNameNotFound()
+        {
+            _ = _repository.CreateClient("alpha", new object());
+            _clientFactory.Verify(f => f.CreateClient("alpha"), Times.Once);
+        }
+
+        [Test]
+        public void CreateClientWithArgument_DoesNotThrow_WhenNameNotFound()
+        {
+            Assert.DoesNotThrow(() => _ = _repository.CreateClient("zulu", new object()));
         }
 
         [Test]
@@ -252,6 +263,50 @@ namespace TSMoreland.Extensions.Http.Tests
             _repository.AddOrUpdate("alpha", builder.Object);
             Assert.Throws<ArgumentNullException>(() => _ = _repository.CreateClient("alpha", argument));
         }
+
+        [Test]
+        public async Task CreateClient_BuildUsingMessageHandlerFactory_WhenBuilderRemovedMidCreation()
+        {
+            TimeSpan MaxWaitTime = TimeSpan.FromSeconds(5);
+            List<Task> tasks = new();
+            ConcurrentBag<HttpClient> clients = new();
+
+            DateTime startTime = DateTime.UtcNow;
+            while ((DateTime.UtcNow - startTime) < MaxWaitTime)
+            {
+                clients.Clear();
+                tasks.Clear();
+                for (int i = 0; i < Environment.ProcessorCount; i += 3)
+                {
+                    tasks.AddRange(new[] {Task.Run(Add), Task.Run(Create), Task.Run(Remove)});
+                }
+                await Task.WhenAll(tasks.ToArray());
+
+                try
+                {
+                    _messageHandlerFactory.Verify(f => f.CreateHandler("alpha"), Times.AtLeastOnce);
+                    break;
+                }
+                catch (MockException)
+                {
+                    // ... haven't hit the race condition yet ...
+                }
+            }
+
+            try
+            {
+                _messageHandlerFactory.Verify(f => f.CreateHandler("alpha"), Times.AtLeastOnce);
+            }
+            catch (MockException)
+            {
+                Assert.Inconclusive("This test relies on a race condition which we cannot guarentee to hit.  As a result we're never really sure if we fail or simply didn't hit the condition.");
+            }
+
+            void Add() => _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            void Remove() => _repository.TryRemoveClient("alpha");
+            void Create() => clients.Add(_repository.CreateClient("alpha", new object()));
+        }
+
 
         private static HttpMessageHandler? GetInternalHandlerFromClientOrNull(HttpClient client)
         {
