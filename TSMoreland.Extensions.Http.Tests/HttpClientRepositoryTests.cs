@@ -156,6 +156,33 @@ namespace TSMoreland.Extensions.Http.Tests
         }
 
         [Test]
+        public void ContainsName_ThrowsArgumentNullException_WhenNameIsNull()
+        {
+            var ex = Assert.Throws<ArgumentNullException>(() => _ = _repository.ContainsName(null!));
+            Assert.That(ex!.ParamName, Is.EqualTo("name"));
+        }
+
+        [Test]
+        public void ContainsName_ThrowsArgumentException_WhenNameIsEmpty()
+        {
+            var ex = Assert.Throws<ArgumentException>(() => _ = _repository.ContainsName(""));
+            Assert.That(ex!.ParamName, Is.EqualTo("name"));
+        }
+
+        [Test]
+        public void ContainsName_ReturnsFalse_WhenNameNotFound()
+        {
+            Assert.That(_repository.ContainsName("alpha"), Is.False);
+        }
+
+        [Test]
+        public void ContainsName_ReturnsTrue_WhenNameFound()
+        {
+            _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            Assert.That(_repository.ContainsName("alpha"), Is.True);
+        }
+
+        [Test]
         public void TryRemoveClient_ThrowsArgumentNullException_WhenNameIsNull()
         {
             var ex = Assert.Throws<ArgumentNullException>(() => _repository.TryRemoveClient(null!));
@@ -235,6 +262,20 @@ namespace TSMoreland.Extensions.Http.Tests
         }
 
         [Test]
+        public void CreateClientWithArgument_ThrowsArgumentNullException_WhenNameIsNull()
+        {
+            var ex = Assert.Throws<ArgumentNullException>(() => _repository.CreateClient(null!, new object()));
+            Assert.That(ex!.ParamName, Is.EqualTo("name"));
+        }
+        [Test]
+        public void CreateClientWithArgument_ThrowsArgumentException_WhenNameIsEmpty()
+        {
+            var ex = Assert.Throws<ArgumentException>(() => _repository.CreateClient("", new object()));
+            Assert.That(ex!.ParamName, Is.EqualTo("name"));
+        }
+
+
+        [Test]
         public void CreateClient_WithArgument_BuildsHandlerUsingArgument_WhenNamedClientBuilderReturnsHandler()
         {
             const string argument = "beta";
@@ -267,12 +308,12 @@ namespace TSMoreland.Extensions.Http.Tests
         [Test]
         public async Task CreateClient_BuildUsingMessageHandlerFactory_WhenBuilderRemovedMidCreation()
         {
-            TimeSpan MaxWaitTime = TimeSpan.FromSeconds(5);
+            TimeSpan maxWaitTime = TimeSpan.FromSeconds(5);
             List<Task> tasks = new();
             ConcurrentBag<HttpClient> clients = new();
 
             DateTime startTime = DateTime.UtcNow;
-            while ((DateTime.UtcNow - startTime) < MaxWaitTime)
+            while ((DateTime.UtcNow - startTime) < maxWaitTime)
             {
                 clients.Clear();
                 tasks.Clear();
@@ -307,6 +348,37 @@ namespace TSMoreland.Extensions.Http.Tests
             void Create() => clients.Add(_repository.CreateClient("alpha", new object()));
         }
 
+        [Test]
+        public async Task CreateClient_HandlerIsDisposed_WhenExpired()
+        {
+            TimeSpan maxWaitTime = TimeSpan.FromSeconds(5);
+            var repository = new HttpClientRepository<object>(
+                _clientFactory.Object,
+                _messageHandlerFactory.Object,
+                _serviceScopeFactory.Object,
+                _logger.Object,
+                TimeSpan.FromMilliseconds(100)) 
+            {
+                _activeHandlerLifetime = TimeSpan.FromMilliseconds(100)
+            };
+            repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+
+            _ = repository.CreateClient("alpha", new object());
+
+            DateTime startTime = DateTime.UtcNow;
+            while ((DateTime.UtcNow - startTime) < maxWaitTime)
+            {
+                GC.Collect();
+                await Task.Delay(TimeSpan.FromMilliseconds(500));
+                GC.Collect();
+                if (repository._expiredHandlers.Count == 0)
+                {
+                    break;
+                }
+            }
+
+            Assert.That(repository._expiredHandlers.Count, Is.EqualTo(0));
+        }
 
         private static HttpMessageHandler? GetInternalHandlerFromClientOrNull(HttpClient client)
         {

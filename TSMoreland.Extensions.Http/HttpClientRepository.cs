@@ -116,6 +116,26 @@ namespace TSMoreland.Extensions.Http
             _cleanupActiveLock = new object();
         }
 
+        /// <summary>
+        /// Internal for testing
+        /// </summary>
+        /// <remarks>
+        /// intended only to allow overriding default clean up interval for tests
+        /// </remarks>
+        internal HttpClientRepository(
+            IHttpClientFactory clientFactory,
+            IHttpMessageHandlerFactory messageHandlerFactory,
+            IServiceScopeFactory scopeFactory,
+            ILogger<HttpClientRepository<T>> logger,
+            TimeSpan? defaultCleanupInterval)
+            : this(clientFactory, messageHandlerFactory, scopeFactory, logger)
+        {
+            if (defaultCleanupInterval != null)
+            {
+                DefaultCleanupInterval = defaultCleanupInterval.Value;
+            }
+        }
+
 
         /// <inheritdoc/>
         public HttpClient CreateClient(string name)
@@ -126,10 +146,7 @@ namespace TSMoreland.Extensions.Http
         /// <inheritdoc/>
         public HttpClient CreateClient(string name, T argument)
         {
-            if (name == null)
-            {
-                throw new ArgumentNullException(nameof(name));
-            }
+            Guard.Against.ArgumentNullOrEmpty(name, nameof(name));
 
             if (!_messageHandlerBuildersByName.ContainsKey(name))
             {
