@@ -8,6 +8,7 @@ namespace TSMoreland.Extensions.Http.Internal
 {
     internal readonly struct ValueStopwatch
     {
+        // ReSharper disable once InconsistentNaming
         private static readonly double TimestampToTicks = TimeSpan.TicksPerSecond / (double)Stopwatch.Frequency;
 
         private readonly long _startTimestamp;
