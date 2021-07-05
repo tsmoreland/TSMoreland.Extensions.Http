@@ -22,12 +22,11 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Http;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using TSMoreland.Extensions.Http.Abstractions;
 using TSMoreland.Extensions.Http.Internal;
 
 namespace TSMoreland.Extensions.Http
 {
-    public sealed class UpdatableHttpClientFactory : IProxiedHttpClientFactory, IHttpMessageHandlerFactory
+    public sealed class UpdatableHttpClientFactory : IHttpMessageHandlerFactory
     {
         private static readonly TimerCallback _cleanupCallback = (s) => ((UpdatableHttpClientFactory)s).CleanupTimer_Tick();
         private readonly ILogger<UpdatableHttpClientFactory> _logger;
@@ -134,11 +133,6 @@ namespace TSMoreland.Extensions.Http
 
             return client;
         }
-        public HttpClient CreateClient(NamedProxy proxy)
-        {
-            throw new NotImplementedException();
-        }
-
         public HttpMessageHandler CreateHandler(string name)
         {
             if (name == null)
