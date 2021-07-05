@@ -402,7 +402,6 @@ namespace TSMoreland.Extensions.Http.Tests
             _ = repository.CreateClient("alpha", new object());
 
             DateTime startTime = DateTime.UtcNow;
-            ;
             while (repository._expiredHandlers.Count != 0 && (DateTime.UtcNow - startTime) < maxWaitTime)
             {
                 GC.Collect();
