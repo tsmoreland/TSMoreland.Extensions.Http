@@ -16,19 +16,6 @@ using System.Net.Http;
 namespace TSMoreland.Extensions.Http
 {
     /// <summary>
-    /// Determines if the repository should be used to create the <see cref="HttpClient"/> instance with
-    /// <paramref name="argument"/> or if <see cref="IHttpClientFactory.CreateClient(string)"/> should be
-    /// used instead
-    /// </summary>
-    /// <typeparam name="T">argument type, must match <see cref="IHttpClientRepository{T}"/></typeparam>
-    /// <param name="argument">argument used to determine how <see cref="HttpClient"/> should be created</param>
-    /// <returns>
-    /// <see langword="true" /> if <see cref="IHttpClientRepository{T}"/> should be used; otherwise
-    /// <see cref="IHttpClientFactory"/> 
-    /// </returns>
-    public delegate bool UseArgumentWhenBuildingClient<in T>(T argument);
-
-    /// <summary>
     /// Builder function use to create and configure a <see cref="HttpMessageHandler"/> using any
     /// <paramref name="argument"/> to configure 
     /// </summary>
