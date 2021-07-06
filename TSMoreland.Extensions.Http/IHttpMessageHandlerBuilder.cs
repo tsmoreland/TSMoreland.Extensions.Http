@@ -14,37 +14,44 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace TSMoreland.Extensions.Http
 {
     public interface IHttpMessageHandlerBuilder<T>
     {
+        /// <summary>
+        /// Builder Name
+        /// </summary>
         public string Name { get; }
-
-        public IServiceCollection Services { get; }
 
         /// <summary>
         /// a delegate that will be used to configure the primary <see cref="HttpMessageHandler"/> for a
         /// named <see cref="HttpClient"/> 
         /// </summary>
-        public Func<T, IServiceCollection, HttpMessageHandler> PrimaryHandlerFactory { get; }
+        /// <exception cref="ArgumentNullException">
+        /// when attempting to set to <see langword="null"/>
+        /// </exception>
+        public Func<T, IServiceProvider, HttpMessageHandler> PrimaryHandlerFactory { get; set; }
 
         /// <summary>
-        /// Delegates which willb e used to configure a named <see cref="HttpClient"/>
+        /// Delegates which will be used to configure a named <see cref="HttpClient"/>
         /// </summary>
-        public IList<Func<T, IServiceCollection, DelegatingHandler>> AdditionalHandlers { get; }
+        public IList<Func<T, IServiceProvider, DelegatingHandler>> AdditionalHandlers { get; }
 
         /// <summary>
         /// Builds an instance of <see cref="HttpMessageHandler"/> using the configured 
         /// <see cref="PrimaryHandlerFactory"/> and optional <see cref="AdditionalHandlers"/>
         /// </summary>
         /// <param name="argument">argument used when constructing the handler</param>
+        /// <param name="serviceProvider">service provider passed to primary handler factory and additional handlers</param>
         /// <returns>A new instance of <see cref="HttpMessageHandler"/></returns>
+        /// <exception cref="ArgumentNullException">
+        /// if <paramref name="serviceProvider"/> is <see langword="null"/>
+        /// </exception>
         /// <remarks>
         /// If <see cref="PrimaryHandlerFactory"/> is null then an instance of <see cref="HttpClientHandler"/>
         /// will be used with default settings.
         /// </remarks>
-        public HttpMessageHandler Build(T argument);
+        public HttpMessageHandler Build(T argument, IServiceProvider serviceProvider);
     }
 }

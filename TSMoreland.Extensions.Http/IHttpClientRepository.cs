@@ -16,17 +16,6 @@ using System.Net.Http;
 namespace TSMoreland.Extensions.Http
 {
     /// <summary>
-    /// Builder function use to create and configure a <see cref="HttpMessageHandler"/> using any
-    /// <paramref name="argument"/> to configure 
-    /// </summary>
-    /// <typeparam name="T">argument type, must match <see cref="IHttpClientRepository{T}"/></typeparam>
-    /// <param name="argument">argument used to determine how <see cref="HttpMessageHandler"/> should be created</param>
-    /// <returns>
-    /// new instance of <see cref="HttpMessageHandler"/> configured using <paramref name="argument"/>
-    /// </returns>
-    public delegate HttpMessageHandler BuildHttpMessageHandler<in T>(T argument);
-
-    /// <summary>
     /// <para>
     /// Extended version of <see cref="IHttpClientFactory"/> based heavily on
     /// <a href="https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs">
@@ -75,18 +64,31 @@ namespace TSMoreland.Extensions.Http
         /// <summary>
         /// Uses the specified functions to add a key/value pair to the
         /// <see cref="IHttpClientRepository{T}" /> if the name does not already exist,
-        /// or to update a key/value pair in the <see cref="IHttpClientRepository{T}" />
-        /// if the name already exists.</summary>
-        /// <param name="name">The name to be added or whose value should be updated</param>
-        /// <param name="builder">The function used to generate a value for an absent key</param>
+        /// </summary>
+        /// <param name="name">The name to be added if not present</param>
         /// <exception cref="T:System.ArgumentNullException">
-        /// <paramref name="name" />, <paramref name="builder" />, is <see langword="null" />.</exception>
+        /// <paramref name="name" /> is <see langword="null" />.</exception>
         /// <exception cref="T:System.OverflowException">The dictionary contains too many elements.</exception>
         /// <returns>
-        /// The new value for the key. This will be be the result of
-        /// <paramref name="builder" />
+        /// The new value for the key which can be used for further configure the message handler if not present;
+        /// otherwise a dummy instance of <see cref="IHttpMessageHandlerBuilder{T}"/> which is not used but provided
+        /// allow the builder patternt o continue
         /// </returns>
-        public BuildHttpMessageHandler<T> AddOrUpdate(string name, BuildHttpMessageHandler<T> builder);
+        public IHttpMessageHandlerBuilder<T> AddIfNotPresent(string name);
+
+        /// <summary>
+        /// Uses the specified functions to add a key/value pair to the
+        /// <see cref="IHttpClientRepository{T}" /> if the name does not already exist,
+        /// or replace the value if it does.
+        /// </summary>
+        /// <param name="name">The name to be added or whose value should be updated</param>
+        /// <exception cref="T:System.ArgumentNullException">
+        /// <paramref name="name" /> is <see langword="null" />.</exception>
+        /// <exception cref="T:System.OverflowException">The dictionary contains too many elements.</exception>
+        /// <returns>
+        /// The new value for the key which can be used for further configure the message handler 
+        /// </returns>
+        public IHttpMessageHandlerBuilder<T> AddOrReplace(string name);
 
         /// <summary>
         /// Determines whether the <see cref="IHttpClientRepository{T}" /> contains the specified name.

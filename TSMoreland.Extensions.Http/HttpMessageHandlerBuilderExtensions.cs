@@ -13,15 +13,23 @@
 
 using System;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Http;
 using TSMoreland.GuardAssertions;
 
 namespace TSMoreland.Extensions.Http
 {
     public static class HttpMessageHandlerBuilderExtensions
     {
+        public static IHttpMessageHandlerBuilder<T> ConfigurePrimaryHandler<T>(
+            this IHttpMessageHandlerBuilder<T> builder,
+            Func<T, IServiceProvider, HttpMessageHandler> configureHandler)
+        {
+            Guard.Against.ArgumentNull(builder, nameof(builder));
+            Guard.Against.ArgumentNull(configureHandler, nameof(configureHandler));
+
+            builder.PrimaryHandlerFactory = configureHandler;
+            return builder;
+        }
+
 
         /// <summary>
         /// Adds a delegate that will be used to create an additional message handler for a named <see cref="HttpClient"/>.
@@ -39,23 +47,12 @@ namespace TSMoreland.Extensions.Http
         /// a reference to a scoped service provider that shares the lifetime of the handler being constructed.
         /// </para>
         /// </remarks>
-        public static IHttpMessageHandlerBuilder<T> AddHttpMessageHandler<T>(this IHttpMessageHandlerBuilder<T> builder, Func<IServiceProvider, DelegatingHandler> configureHandler)
+        public static IHttpMessageHandlerBuilder<T> AddHttpMessageHandler<T>(this IHttpMessageHandlerBuilder<T> builder, Func<T, IServiceProvider, DelegatingHandler> configureHandler)
         {
-            if (builder == null)
-            {
-                throw new ArgumentNullException(nameof(builder));
-            }
+            Guard.Against.ArgumentNull(builder, nameof(builder));
+            Guard.Against.ArgumentNull(configureHandler, nameof(configureHandler));
 
-            if (configureHandler == null)
-            {
-                throw new ArgumentNullException(nameof(configureHandler));
-            }
-
-            builder.Services.Configure<HttpClientFactoryOptions>(builder.Name, options =>
-            {
-                options.HttpMessageHandlerBuilderActions.Add(b => b.AdditionalHandlers.Add(configureHandler(b.Services)));
-            });
-
+            builder.AdditionalHandlers.Add(configureHandler);
             return builder;
         }
 

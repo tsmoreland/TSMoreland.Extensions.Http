@@ -47,8 +47,6 @@ namespace TSMoreland.Extensions.Http
         private readonly IServiceScopeFactory _scopeFactory;
         private readonly ILogger<HttpClientRepository<T>> _logger;
 
-        private readonly ConcurrentDictionary<string, BuildHttpMessageHandler<T>> _messageHandlerBuildersByName;
-
         // Default time of 10s for cleanup seems reasonable.
         // Quick math:
         // 10 distinct named clients * expiry time >= 1s = approximate cleanup queue of 100 items
@@ -105,7 +103,7 @@ namespace TSMoreland.Extensions.Http
             _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-            _messageHandlerBuildersByName = new ConcurrentDictionary<string, BuildHttpMessageHandler<T>>();
+            MessageHandlersByName = new ConcurrentDictionary<string, IHttpMessageHandlerBuilder<T>>();
 
             // case-sensitive because named options is.
             _activeHandlers = new ConcurrentDictionary<string, Lazy<ActiveHandlerTrackingEntry>>(StringComparer.Ordinal);
@@ -148,7 +146,7 @@ namespace TSMoreland.Extensions.Http
         {
             Guard.Against.ArgumentNullOrEmpty(name, nameof(name));
 
-            if (!_messageHandlerBuildersByName.ContainsKey(name))
+            if (!MessageHandlersByName.ContainsKey(name))
             {
                 _logger.LogWarning($"{name} not found in message handler builders, using HttpClientFactory to construct client");
                 return _clientFactory.CreateClient(name);
@@ -163,18 +161,41 @@ namespace TSMoreland.Extensions.Http
         public bool ContainsName(string name)
         {
             Guard.Against.ArgumentNullOrEmpty(name, nameof(name));
-            return _messageHandlerBuildersByName.ContainsKey(name);
+            return MessageHandlersByName.ContainsKey(name);
         }
 
         /// <inheritdoc/>
-        public BuildHttpMessageHandler<T> AddOrUpdate(string name, BuildHttpMessageHandler<T> builder)
+        public IHttpMessageHandlerBuilder<T> AddIfNotPresent(string name)
         {
             Guard.Against.ArgumentNullOrEmpty(name, nameof(name));
-            Guard.Against.ArgumentNull(builder, nameof(builder));
+
+            var builder = new DefaultHttpMessageHandlerBuilder<T>(name);
 
             _logger.LogDebug($"Adding or updating {name} message handler builder");
             // add, most recent call wins the race if multiple calls
-            return _messageHandlerBuildersByName.AddOrUpdate(name, builder, (_, _) => builder);
+
+            bool isPresent = false;
+            MessageHandlersByName.AddOrUpdate(name, builder, 
+                (_, value) =>
+                {
+                    isPresent = true; 
+                    return value; 
+                });
+
+            return isPresent
+                ? new UnusedHttpMessageHandlerBuilder<T>(name)
+                : builder;
+        }
+
+        /// <inheritdoc/>
+        public IHttpMessageHandlerBuilder<T> AddOrReplace(string name)
+        {
+            Guard.Against.ArgumentNullOrEmpty(name, nameof(name));
+
+            var builder = new DefaultHttpMessageHandlerBuilder<T>(name);
+            _logger.LogDebug($"Adding or updating {name} message handler builder");
+            // add, most recent call wins the race if multiple calls
+            return MessageHandlersByName.AddOrUpdate(name, builder, (_, _) => builder);
         }
 
         /// <inheritdoc/>
@@ -182,7 +203,7 @@ namespace TSMoreland.Extensions.Http
         {
             Guard.Against.ArgumentNullOrEmpty(name, nameof(name));
 
-            if (!_messageHandlerBuildersByName.TryRemove(name, out _))
+            if (!MessageHandlersByName.TryRemove(name, out _))
             {
                 return false;
             }
@@ -197,7 +218,7 @@ namespace TSMoreland.Extensions.Http
         {
             Guard.Against.ArgumentNull(name, nameof(name));
 
-            if (!_messageHandlerBuildersByName.ContainsKey(name))
+            if (!MessageHandlersByName.ContainsKey(name))
             {
                 _logger.LogWarning($"{name} not found in message handler builders, using HttpMessageHandlerFactory to construct client");
                 return _messageHandlerFactory.CreateHandler(name);
@@ -218,7 +239,7 @@ namespace TSMoreland.Extensions.Http
 
         /// <remarks>
         /// <para>
-        /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
+        /// Based on DefaultHttpClientFactory, modified to use <see cref="MessageHandlersByName"/>
         /// <a href="https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L136">
         /// DefaultHttpClientFactory.cs line 136
         /// </a>
@@ -239,7 +260,7 @@ namespace TSMoreland.Extensions.Http
             {
                 scope = _scopeFactory.CreateScope();
 
-                if (!_messageHandlerBuildersByName.TryGetValue(name, out var builder))
+                if (!MessageHandlersByName.TryGetValue(name, out var builder))
                 {
                     // constructing with an argument but don't have a builder that can use it, if we get here it's due to race condition
                     _logger.LogWarning("Constructing HttpClient from repository using IHttpMessageHandlerFactory fallback");
@@ -249,7 +270,7 @@ namespace TSMoreland.Extensions.Http
                 else
                 {
                     // Wrap the handler so we can ensure the inner handler outlives the outer handler.
-                    var handler = new LifetimeTrackingProxiedHttpMessageHandler(builder(argument));
+                    var handler = new LifetimeTrackingProxiedHttpMessageHandler(builder.Build(argument, scope.ServiceProvider));
 
                     // Note that we can't start the timer here. That would introduce a very very subtle race condition
                     // with very short expiry times. We need to wait until we've actually handed out the handler once
@@ -273,12 +294,11 @@ namespace TSMoreland.Extensions.Http
         /// <summary>
         /// internal for testing
         /// </summary>
-        internal ConcurrentDictionary<string, BuildHttpMessageHandler<T>> MessageHandlersByName =>
-            _messageHandlerBuildersByName;
+        internal ConcurrentDictionary<string, IHttpMessageHandlerBuilder<T>> MessageHandlersByName { get; }
 
         /// <remarks>
         /// <para>
-        /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
+        /// Based on DefaultHttpClientFactory, modified to use <see cref="MessageHandlersByName"/>
         /// <a href="https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L207">
         /// DefaultHttpClientFactory.cs line 207
         /// </a>
@@ -319,7 +339,7 @@ namespace TSMoreland.Extensions.Http
 
         /// <remarks>
         /// <para>
-        /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
+        /// Based on DefaultHttpClientFactory, modified to use <see cref="MessageHandlersByName"/>
         /// <a href="https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L232">
         /// DefaultHttpClientFactory.cs line 232
         /// </a>
@@ -335,7 +355,7 @@ namespace TSMoreland.Extensions.Http
 
         /// <remarks>
         /// <para>
-        /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
+        /// Based on DefaultHttpClientFactory, modified to use <see cref="MessageHandlersByName"/>
         /// <a href="https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L238">
         /// DefaultHttpClientFactory.cs line 238
         /// </a>
@@ -354,7 +374,7 @@ namespace TSMoreland.Extensions.Http
 
         /// <remarks>
         /// <para>
-        /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
+        /// Based on DefaultHttpClientFactory, modified to use <see cref="MessageHandlersByName"/>
         /// <a href="https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L250">
         /// DefaultHttpClientFactory.cs line 250
         /// </a>
@@ -374,7 +394,7 @@ namespace TSMoreland.Extensions.Http
 
         /// <remarks>
         /// <para>
-        /// Based on DefaultHttpClientFactory, modified to use <see cref="_messageHandlerBuildersByName"/>
+        /// Based on DefaultHttpClientFactory, modified to use <see cref="MessageHandlersByName"/>
         /// <a href="https://github.com/dotnet/runtime/blob/41e6601c5f9458fa8c5dea25ee78cbf121aa322f/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs#L260">
         /// DefaultHttpClientFactory.cs line 260
         /// </a>
