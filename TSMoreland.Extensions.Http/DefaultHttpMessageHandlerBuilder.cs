@@ -12,37 +12,53 @@
 // 
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net.Http;
+using Microsoft.Extensions.DependencyInjection;
+using TSMoreland.GuardAssertions;
 
 namespace TSMoreland.Extensions.Http
 {
     public class DefaultHttpMessageHandlerBuilder<T> : IHttpMessageHandlerBuilder<T>
     {
-        private readonly List<Func<T, DelegatingHandler>> _additionalHandlers;
-
-        public DefaultHttpMessageHandlerBuilder()
+        public DefaultHttpMessageHandlerBuilder(string name, IServiceCollection services, 
+            Func<T, IServiceCollection, HttpMessageHandler>? primaryHandlerFactory)
         {
-            _additionalHandlers = new List<Func<T, DelegatingHandler>>();
+            Guard.Against.ArgumentNullOrEmpty(name, nameof(name));
+
+            Name = name;
+            Services = services ?? throw new ArgumentNullException(nameof(services));
+            AdditionalHandlers = new List<Func<T, IServiceCollection, DelegatingHandler>>();
+
+            PrimaryHandlerFactory = primaryHandlerFactory ?? DefaultHandler;
+
+            static HttpMessageHandler DefaultHandler(T argument, IServiceCollection services)
+            {
+                return new HttpClientHandler();
+            }
         }
 
         /// <inheritdoc/>
-        public Func<T, HttpMessageHandler>? PrimaryHandler { get; internal set; }
+        public string Name { get; }
 
         /// <inheritdoc/>
-        public IEnumerable<Func<T, DelegatingHandler>> AdditionalHandlers => 
-            _additionalHandlers.AsEnumerable();
+        public IServiceCollection Services { get; }
+
+        /// <inheritdoc/>
+        public Func<T, IServiceCollection, HttpMessageHandler> PrimaryHandlerFactory { get; }
+
+        /// <inheritdoc/>
+        public List<Func<T, IServiceCollection, DelegatingHandler>> AdditionalHandlers { get; }
 
         /// <inheritdoc/>
         public HttpMessageHandler Build(T argument)
         {
-            var primary = PrimaryHandler?.Invoke(argument) ?? new HttpClientHandler();
+            var primary = PrimaryHandlerFactory.Invoke(argument, Services) ?? new HttpClientHandler();
 
             var previous = primary;
             HttpMessageHandler? topMost = null;
-            for (int i = _additionalHandlers.Count - 1; i >= 0; i--)
+            for (int i = AdditionalHandlers.Count - 1; i >= 0; i--)
             {
-                var delegatingHandler = _additionalHandlers[i](argument);
+                var delegatingHandler = AdditionalHandlers[i](argument, Services);
                 delegatingHandler.InnerHandler = previous;
                 previous = delegatingHandler;
                 topMost ??= previous;

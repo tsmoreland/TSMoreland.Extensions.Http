@@ -14,30 +14,35 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace TSMoreland.Extensions.Http
 {
     public interface IHttpMessageHandlerBuilder<T>
     {
+        public string Name { get; }
+
+        public IServiceCollection Services { get; }
+
         /// <summary>
         /// a delegate that will be used to configure the primary <see cref="HttpMessageHandler"/> for a
         /// named <see cref="HttpClient"/> 
         /// </summary>
-        public Func<T, HttpMessageHandler>? PrimaryHandler { get; }
+        public Func<T, IServiceCollection, HttpMessageHandler> PrimaryHandlerFactory { get; }
 
         /// <summary>
         /// Delegates which willb e used to configure a named <see cref="HttpClient"/>
         /// </summary>
-        public IEnumerable<Func<T, DelegatingHandler>> AdditionalHandlers { get; }
+        public IList<Func<T, IServiceCollection, DelegatingHandler>> AdditionalHandlers { get; }
 
         /// <summary>
         /// Builds an instance of <see cref="HttpMessageHandler"/> using the configured 
-        /// <see cref="PrimaryHandler"/> and optional <see cref="AdditionalHandlers"/>
+        /// <see cref="PrimaryHandlerFactory"/> and optional <see cref="AdditionalHandlers"/>
         /// </summary>
         /// <param name="argument">argument used when constructing the handler</param>
         /// <returns>A new instance of <see cref="HttpMessageHandler"/></returns>
         /// <remarks>
-        /// If <see cref="PrimaryHandler"/> is null then an instance of <see cref="HttpClientHandler"/>
+        /// If <see cref="PrimaryHandlerFactory"/> is null then an instance of <see cref="HttpClientHandler"/>
         /// will be used with default settings.
         /// </remarks>
         public HttpMessageHandler Build(T argument);
