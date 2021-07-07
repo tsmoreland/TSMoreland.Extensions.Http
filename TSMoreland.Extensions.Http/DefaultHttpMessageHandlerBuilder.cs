@@ -30,10 +30,6 @@ namespace TSMoreland.Extensions.Http
 
             _primaryHandlerFactory = DefaultHandler;
 
-            static HttpMessageHandler DefaultHandler(T argument, IServiceProvider serviceProvider)
-            {
-                return new HttpClientHandler();
-            }
         }
 
         /// <inheritdoc/>
@@ -77,6 +73,14 @@ namespace TSMoreland.Extensions.Http
             }
             topMost ??= primary;
             return topMost!;
+        }
+
+        /// <summary>
+        /// Internal for test
+        /// </summary>
+        internal static HttpMessageHandler DefaultHandler(T argument, IServiceProvider serviceProvider)
+        {
+            return new HttpClientHandler();
         }
     }
 }
