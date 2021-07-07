@@ -3,14 +3,14 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31410.223
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http", "TSMoreland.Extensions.Http\TSMoreland.Extensions.Http.csproj", "{E8D415E9-DB81-4F5D-ACA3-1AE37CCCE6CC}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http.Abstractions", "TSMoreland.Extensions.Http.Abstractions\TSMoreland.Extensions.Http.Abstractions.csproj", "{A4E046CA-654C-44ED-A4FC-9D0474FA88B2}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http", "TSMoreland.Extensions.Http\TSMoreland.Extensions.Http.csproj", "{E8D415E9-DB81-4F5D-ACA3-1AE37CCCE6CC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5CF43DA9-27BA-4FED-BC25-FF04D6B23706}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.Tests", "TSMoreland.Extensions.Http.Tests\TSMoreland.Extensions.Http.Tests.csproj", "{B956F470-57C0-41CD-9F37-1F819E9EC0FC}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -22,10 +22,10 @@ Global
 		{E8D415E9-DB81-4F5D-ACA3-1AE37CCCE6CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E8D415E9-DB81-4F5D-ACA3-1AE37CCCE6CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E8D415E9-DB81-4F5D-ACA3-1AE37CCCE6CC}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A4E046CA-654C-44ED-A4FC-9D0474FA88B2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A4E046CA-654C-44ED-A4FC-9D0474FA88B2}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A4E046CA-654C-44ED-A4FC-9D0474FA88B2}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A4E046CA-654C-44ED-A4FC-9D0474FA88B2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B956F470-57C0-41CD-9F37-1F819E9EC0FC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B956F470-57C0-41CD-9F37-1F819E9EC0FC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B956F470-57C0-41CD-9F37-1F819E9EC0FC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B956F470-57C0-41CD-9F37-1F819E9EC0FC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
