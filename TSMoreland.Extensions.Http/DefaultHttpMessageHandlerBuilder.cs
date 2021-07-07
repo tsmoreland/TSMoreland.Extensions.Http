@@ -58,13 +58,19 @@ namespace TSMoreland.Extensions.Http
         {
             Guard.Against.ArgumentNull(serviceProvider, nameof(serviceProvider));
 
-            var primary = PrimaryHandlerFactory.Invoke(argument, serviceProvider) ?? new HttpClientHandler();
+            var primary = PrimaryHandlerFactory.Invoke(argument, serviceProvider) ?? 
+                          throw new HttpMessageHandlerBuilderException("Primary handler configurer returned null.");
 
             var previous = primary;
             HttpMessageHandler? topMost = null;
             for (int i = AdditionalHandlers.Count - 1; i >= 0; i--)
             {
                 var delegatingHandler = AdditionalHandlers[i](argument, serviceProvider);
+                if (delegatingHandler == null!)
+                {
+                    throw new HttpMessageHandlerBuilderException($"Delegating handler at position {i+1} returned null.");
+                }
+
                 delegatingHandler.InnerHandler = previous;
                 previous = delegatingHandler;
                 topMost ??= previous;

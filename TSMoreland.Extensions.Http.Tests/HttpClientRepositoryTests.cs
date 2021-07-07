@@ -33,6 +33,7 @@ namespace TSMoreland.Extensions.Http.Tests
         private Mock<ILogger<HttpClientRepository<object>>> _logger = null!;
         private Mock<IServiceScopeFactory> _serviceScopeFactory = null!;
         private Mock<IServiceScope> _serviceScope = null!;
+        private Mock<IServiceProvider> _serviceProvider = null!;
         private Mock<IHttpClientFactory> _clientFactory = null!;
         private Mock<IHttpMessageHandlerFactory> _messageHandlerFactory = null!;
         private HttpClient _createdClient = null!;
@@ -57,11 +58,15 @@ namespace TSMoreland.Extensions.Http.Tests
                 .Setup(factory => factory.CreateHandler(It.IsAny<string>()))
                 .Returns(_messageHandler.Object);
 
+            _serviceProvider = new Mock<IServiceProvider>();
             _serviceScope = new Mock<IServiceScope>();
             _serviceScopeFactory = new Mock<IServiceScopeFactory>();
             _serviceScopeFactory
                 .Setup(f => f.CreateScope())
                 .Returns(_serviceScope.Object);
+            _serviceScope
+                .SetupGet(s => s.ServiceProvider)
+                .Returns(_serviceProvider.Object);
 
             _repository = new HttpClientRepository<object>(
                 _clientFactory.Object,
@@ -114,45 +119,37 @@ namespace TSMoreland.Extensions.Http.Tests
         public void AddOrUpdate_ThrowsArgumentNullException_WhenNameIsNull()
         {
             var ex = Assert.Throws<ArgumentNullException>(() =>
-                _ = _repository.AddOrUpdate(null!, @object => new MockHttpMessageHandler<object>(@object)));
+                _ = _repository.AddIfNotPresent(null!));
             Assert.That(ex!.ParamName, Is.EqualTo("name"));
         }
 
         [Test]
         public void AddOrUpdate_ThrowsArgumentException_WhenNameIsEmpty()
         {
-            var ex = Assert.Throws<ArgumentNullException>(() => _repository.AddOrUpdate(null!, _ => _messageHandler.Object));
+            var ex = Assert.Throws<ArgumentNullException>(() => _repository.AddIfNotPresent(null!));
             Assert.That(ex!.ParamName, Is.EqualTo("name"));
         }
 
         [Test]
         public void AddOrUpdate_AddsHandler_WhenNameNotFound()
         {
-            _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            _repository.AddIfNotPresent("alpha");
             Assert.That(_repository.MessageHandlersByName.ContainsKey("alpha"), Is.True);
         }
 
         [Test]
         public void AddOrUpdate_UpdatesHandler_WhenNameFound()
         {
-            _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            _repository.AddIfNotPresent("alpha");
             var expectedCount = _repository.MessageHandlersByName.Count;
             _repository.MessageHandlersByName.TryGetValue("alpha", out var firstHandler);
 
-            _repository.AddOrUpdate("alpha", @object => new MockHttpMessageHandler<object>(@object));
+            _repository.AddOrReplace("alpha");
             _repository.MessageHandlersByName.TryGetValue("alpha", out var secondHandler);
 
             Assert.That(_repository.MessageHandlersByName.Count, Is.EqualTo(expectedCount));
             Assert.That(ReferenceEquals(firstHandler, secondHandler), Is.False);
 
-        }
-
-        [Test]
-        public void AddOrUpdate_ThrowsArgumentNullException_WhenBuilderIsNull()
-        {
-            var ex = Assert.Throws<ArgumentNullException>(() =>
-                _ = _repository.AddOrUpdate("alpha", null!));
-            Assert.That(ex!.ParamName, Is.EqualTo("builder"));
         }
 
         [Test]
@@ -178,7 +175,7 @@ namespace TSMoreland.Extensions.Http.Tests
         [Test]
         public void ContainsName_ReturnsTrue_WhenNameFound()
         {
-            _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            _repository.AddIfNotPresent("alpha");
             Assert.That(_repository.ContainsName("alpha"), Is.True);
         }
 
@@ -205,14 +202,14 @@ namespace TSMoreland.Extensions.Http.Tests
         [Test]
         public void TryRemoveClient_ReturnsTrue_WhenNameFound()
         {
-            _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            _repository.AddIfNotPresent("alpha");
             Assert.That(_repository.TryRemoveClient("alpha"), Is.True);
         }
 
         [Test]
         public void TryRemoveClient_RemovesActiveHandler_WhenNamedClientCreated()
         {
-            _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            _repository.AddIfNotPresent("alpha");
             _repository._activeHandlerLifetime = TimeSpan.FromSeconds(1);
             var client = _repository.CreateClient("alpha", new object());
             _repository.TryRemoveClient("alpha");
@@ -224,7 +221,7 @@ namespace TSMoreland.Extensions.Http.Tests
         [Test]
         public void TryRemoveClient_ClientAddedToExpiryQueue_WhenNamedClientCreated()
         {
-            _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            _repository.AddIfNotPresent("alpha");
             _repository._activeHandlerLifetime = TimeSpan.FromSeconds(1);
             var client = _repository.CreateClient("alpha", new object());
             _repository.TryRemoveClient("alpha");
@@ -280,29 +277,18 @@ namespace TSMoreland.Extensions.Http.Tests
         {
             const string argument = "beta";
             var expectedInnerHandler = new MockHttpMessageHandler<object>(argument);
-            Mock<BuildHttpMessageHandler<object>> builder = new();
-            builder
-                .Setup(b => b.Invoke(argument))
+            Mock<Func<object, IServiceProvider, HttpMessageHandler>> configuerer = new();
+            configuerer
+                .Setup(b => b.Invoke(argument, _serviceProvider.Object))
                 .Returns(expectedInnerHandler);
-            _repository.AddOrUpdate("alpha", builder.Object);
+            _repository.AddIfNotPresent("alpha")
+                .ConfigurePrimaryHandler(configuerer.Object);
 
             var client = _repository.CreateClient("alpha", argument);
             var handler = GetInternalHandlerFromClientOrNull(client);
 
-            builder.Verify(b => b.Invoke(argument), Times.Once);
+            configuerer.Verify(b => b.Invoke(argument, _serviceProvider.Object), Times.Once);
             Assert.That(ReferenceEquals(handler, expectedInnerHandler), Is.True);
-        }
-
-        [Test]
-        public void CreateClient_WithArgument_ThrowsArgumentNullException_WhenNamedClientBuilderReturnsNull()
-        {
-            const string argument = "beta";
-            Mock<BuildHttpMessageHandler<object>> builder = new();
-            builder
-                .Setup(b => b.Invoke(argument))
-                .Returns((MockHttpMessageHandler<object>) null!);
-            _repository.AddOrUpdate("alpha", builder.Object);
-            Assert.Throws<ArgumentNullException>(() => _ = _repository.CreateClient("alpha", argument));
         }
 
         [Test]
@@ -343,7 +329,7 @@ namespace TSMoreland.Extensions.Http.Tests
                 Assert.Inconclusive("This test relies on a race condition which we cannot guarentee to hit.  As a result we're never really sure if we fail or simply didn't hit the condition.");
             }
 
-            void Add() => _repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            void Add() => _repository.AddIfNotPresent("alpha");
             void Remove() => _repository.TryRemoveClient("alpha");
             void Create() => clients.Add(_repository.CreateClient("alpha", new object()));
         }
@@ -361,7 +347,7 @@ namespace TSMoreland.Extensions.Http.Tests
             {
                 _activeHandlerLifetime = TimeSpan.FromMilliseconds(100)
             };
-            repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            repository.AddIfNotPresent("alpha");
 
             _ = repository.CreateClient("alpha", new object());
 
@@ -393,12 +379,12 @@ namespace TSMoreland.Extensions.Http.Tests
             {
                 _activeHandlerLifetime = TimeSpan.FromMilliseconds(100)
             };
-            repository.AddOrUpdate("alpha", _ => _messageHandler.Object);
+            repository.AddIfNotPresent("alpha");
             _ = repository.CreateClient("alpha", new object());
             repository.TryRemoveClient("alpha");
 
             repository._activeHandlerLifetime = TimeSpan.FromMinutes(2);
-            repository.AddOrUpdate("alpha", @object => new MockHttpMessageHandler<object>(@object));
+            repository.AddOrReplace("alpha");
             _ = repository.CreateClient("alpha", new object());
 
             DateTime startTime = DateTime.UtcNow;
