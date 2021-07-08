@@ -13,6 +13,7 @@
 
 using System;
 using System.Net.Http;
+using Moq;
 using NUnit.Framework;
 
 namespace TSMoreland.Extensions.Http.Tests
@@ -20,11 +21,13 @@ namespace TSMoreland.Extensions.Http.Tests
     [TestFixture]
     public sealed class DefaultHttpMessageHandlerBuilderTests
     {
+        private Mock<IServiceProvider> _serviceProvider = null!;
+
 
         [SetUp]
         public void Setup()
         {
-
+            _serviceProvider = new Mock<IServiceProvider>();
         }
 
         [Test]
@@ -61,7 +64,7 @@ namespace TSMoreland.Extensions.Http.Tests
         public void PrimaryHandlerFactory_ReturnsSetvalue_WhenSet()
         {
             var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha");
-            HttpMessageHandler Expected(object @object, IServiceProvider _) => new MockHttpMessageHandler<object>(@object);
+            static HttpMessageHandler Expected(object @object, IServiceProvider _) => new MockHttpMessageHandler<object>(@object);
 
             builder.PrimaryHandlerFactory = Expected;
 
@@ -71,13 +74,21 @@ namespace TSMoreland.Extensions.Http.Tests
         [Test]
         public void Build_ThrowsHttpMessageHandlerBuilderException_WhenPrimaryHandlerFactoryReturnsNull()
         {
-            Assert.Inconclusive("Not Implemented");
+            var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha")
+                .ConfigurePrimaryHandler((_, _) => null!);
+
+            Assert.Throws<HttpMessageHandlerBuilderException>(() =>
+                _ = builder.Build(new object(), _serviceProvider.Object));
         }
 
         [Test]
         public void Build_ThrowsHttpMessageHandlerBuilderException_WhenAnyAdditionalHandlerReturnsNull()
         {
-            Assert.Inconclusive("Not Implemented");
+            var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha")
+                .AddHttpMessageHandler((_, _) => null!);
+
+            Assert.Throws<HttpMessageHandlerBuilderException>(() =>
+                _ = builder.Build(new object(), _serviceProvider.Object));
         }
 
         [Test]
