@@ -60,7 +60,7 @@ namespace TSMoreland.Extensions.Http
 
             var previous = primary;
             HttpMessageHandler? topMost = null;
-            for (int i = AdditionalHandlers.Count - 1; i >= 0; i--)
+            for (int i = 0; i < AdditionalHandlers.Count; i++)
             {
                 var delegatingHandler = AdditionalHandlers[i](argument, serviceProvider);
                 if (delegatingHandler == null!)
@@ -70,7 +70,7 @@ namespace TSMoreland.Extensions.Http
 
                 delegatingHandler.InnerHandler = previous;
                 previous = delegatingHandler;
-                topMost ??= previous;
+                topMost = previous;
             }
             topMost ??= primary;
             return topMost!;

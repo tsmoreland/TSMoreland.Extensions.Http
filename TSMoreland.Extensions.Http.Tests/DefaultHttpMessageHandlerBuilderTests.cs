@@ -12,7 +12,11 @@
 // 
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
+using System.Runtime.CompilerServices;
+using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NUnit.Framework;
 using TSMoreland.Extensions.Http.Abstractions;
@@ -92,16 +96,79 @@ namespace TSMoreland.Extensions.Http.Tests
                 _ = builder.Build(new object(), _serviceProvider.Object));
         }
 
+        /// <summary>
+        /// like a stack the handlers are used in order of last added down to the primary handler
+        /// </summary>
         [Test]
         public void Build_UsesAdditionalHandlersInReverseOrder_WhenValid()
         {
-            Assert.Inconclusive("Not Implemented");
+            // Arrange
+            var expected = new[]
+            {
+                new EmptyDelegatingHandler(1),
+                new EmptyDelegatingHandler(2),
+                new EmptyDelegatingHandler(3),
+                new EmptyDelegatingHandler(4),
+            };
+
+            var primaryHandler = Mock.Of<HttpMessageHandler>();
+            var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha")
+                .ConfigurePrimaryHandler((_, _) => primaryHandler);
+            builder = expected.Aggregate(builder, (current, next) => current.AddHttpMessageHandler((_, _) => next));
+
+            // Act
+            var handler = builder.Build(new object(), Mock.Of<IServiceProvider>());
+
+            // Assert
+
+            var delegatingHandler = (DelegatingHandler) handler; 
+            for (int i = expected.Length - 1; i > 0; i--)
+            {
+                Assert.That(delegatingHandler, Is.EqualTo(expected[i]));
+                if (delegatingHandler.InnerHandler is DelegatingHandler innerDelegatingHandler)
+                {
+                    delegatingHandler = innerDelegatingHandler;
+                }
+            }
+
         }
 
         [Test]
         public void Build_UsesPrimaryHandlerLast_WhenValid()
         {
-            Assert.Inconclusive("Not Implemented");
+            // Arrange
+            var expected = new[]
+            {
+                new EmptyDelegatingHandler(1),
+                new EmptyDelegatingHandler(2),
+            };
+
+            var expectedPrimary = Mock.Of<HttpMessageHandler>();
+            var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha")
+                .ConfigurePrimaryHandler((_, _) => expectedPrimary);
+            builder = expected.Aggregate(builder, (current, next) => current.AddHttpMessageHandler((_, _) => next));
+
+            // Act
+            var handler = builder.Build(new object(), Mock.Of<IServiceProvider>());
+
+            // Assert
+
+            HttpMessageHandler? actualPrimary = null;
+            var delegatingHandler = (DelegatingHandler) handler; 
+            for (int i = expected.Length - 1; i >= 0; i--)
+            {
+                if (delegatingHandler.InnerHandler is DelegatingHandler innerDelegatingHandler)
+                {
+                    delegatingHandler = innerDelegatingHandler;
+                }
+                else
+                {
+                    actualPrimary = delegatingHandler.InnerHandler;
+                }
+            }
+
+            Assert.That(actualPrimary, Is.EqualTo(expectedPrimary));
+
         }
 
     }
