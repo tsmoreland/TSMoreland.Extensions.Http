@@ -22,6 +22,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Moq.Protected;
 using NUnit.Framework;
 using TSMoreland.Extensions.Http.Abstractions;
 using TSMoreland.Extensions.Http.Internal;
@@ -426,7 +427,7 @@ namespace TSMoreland.Extensions.Http.Tests
         /// </a>
         /// </para>
         /// <para>
-        /// Licensed to the .NET Foundation under one or more agreements.
+        /// Licensed to the .NET Foundation under one or more agreements.<br/>
         /// The .NET Foundation licenses this file to you under the MIT license.
         /// </para>
         /// </summary>
@@ -452,6 +453,40 @@ namespace TSMoreland.Extensions.Http.Tests
             // Assert
             Assert.That(count, Is.EqualTo(1));
             Assert.That(client1, Is.Not.EqualTo(client2));
+        }
+
+        /// <summary>
+        /// <para>
+        /// Based on
+        /// <a href="https://github.com/dotnet/runtime/blob/8b42b7fa31c7c1a55b1b36213db9ef6f562ed61e/src/libraries/Microsoft.Extensions.Http/tests/Microsoft.Extensions.Http.Tests/DefaultHttpClientFactoryTest.cs#L86">
+        /// DefaultHttpClientFactoryTest.Factory_DisposeClient_DoesNotDisposeHandler
+        /// </a>
+        /// </para>
+        /// <para>
+        /// Licensed to the .NET Foundation under one or more agreements.<br/>
+        /// The .NET Foundation licenses this file to you under the MIT license.
+        /// </para>
+        /// </summary>
+        [Test]
+        public void Repository_DisposeClient_DoesNotDisposeHandler()
+        {
+            // Arrange
+            var mockHandler = new Mock<HttpMessageHandler>();
+            mockHandler
+                .Protected()
+                .Setup("Dispose", ItExpr.IsAny<bool>())
+                .Throws(new Exception("Dispose should not be called"));
+            var repository = new HttpClientRepository<object>(_clientFactory.Object, _messageHandlerFactory.Object, _serviceScopeFactory.Object, _logger.Object);
+            repository.AddIfNotPresent("alpha")
+                .ConfigurePrimaryHandler((_, _) => mockHandler.Object);
+
+            // Act / Assert 
+            Assert.DoesNotThrow(() => 
+            {
+                using (repository.CreateClient("alpha", new object()))
+                {
+                }
+            });
         }
     }
 }
