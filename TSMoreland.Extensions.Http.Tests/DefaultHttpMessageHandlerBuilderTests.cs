@@ -15,6 +15,7 @@ using System;
 using System.Net.Http;
 using Moq;
 using NUnit.Framework;
+using TSMoreland.Extensions.Http.Abstractions;
 
 namespace TSMoreland.Extensions.Http.Tests
 {
@@ -102,5 +103,6 @@ namespace TSMoreland.Extensions.Http.Tests
         {
             Assert.Inconclusive("Not Implemented");
         }
+
     }
 }

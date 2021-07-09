@@ -15,7 +15,7 @@ using System;
 using System.Net.Http;
 using TSMoreland.GuardAssertions;
 
-namespace TSMoreland.Extensions.Http
+namespace TSMoreland.Extensions.Http.Abstractions
 {
     public static class HttpMessageHandlerBuilderExtensions
     {

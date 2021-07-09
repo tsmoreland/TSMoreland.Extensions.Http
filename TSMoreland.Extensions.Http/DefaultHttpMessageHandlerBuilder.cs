@@ -13,6 +13,7 @@
 using System;
 using System.Collections.Generic;
 using System.Net.Http;
+using TSMoreland.Extensions.Http.Abstractions;
 using TSMoreland.GuardAssertions;
 
 namespace TSMoreland.Extensions.Http

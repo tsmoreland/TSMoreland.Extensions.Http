@@ -13,7 +13,7 @@
 
 using System.Net.Http;
 
-namespace TSMoreland.Extensions.Http
+namespace TSMoreland.Extensions.Http.Abstractions
 {
     /// <summary>
     /// <para>

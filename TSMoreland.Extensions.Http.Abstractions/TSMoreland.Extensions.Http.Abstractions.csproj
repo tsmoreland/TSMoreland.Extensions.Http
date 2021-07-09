@@ -6,7 +6,7 @@
     <Company />
     <langversion>9</langversion>
     <nullable>enable</nullable>
-    <Description>Extenson to Microsoft.Extensions.Http adding an alternate HttpClientFactory by composition adding dynamic support for proxy based HttpClients which may be created and removed at runtime</Description>
+    <Description>Interface and other Abstractions for TSMoreland.Extensions.Http</Description>
     <Copyright>Copyright © 2021 Terry Moreland</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
     <NeutralLanguage>en-US</NeutralLanguage>
@@ -26,9 +26,4 @@
     <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
     <PackageReference Include="TSMoreland.GuardAssertions" Version="0.1.0" />
   </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\TSMoreland.Extensions.Http.Abstractions\TSMoreland.Extensions.Http.Abstractions.csproj" />
-  </ItemGroup>
-
 </Project>

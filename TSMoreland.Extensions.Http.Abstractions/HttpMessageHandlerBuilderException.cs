@@ -13,7 +13,7 @@
 using System;
 using System.Runtime.Serialization;
 
-namespace TSMoreland.Extensions.Http
+namespace TSMoreland.Extensions.Http.Abstractions
 {
     public sealed class HttpMessageHandlerBuilderException : Exception
     {
