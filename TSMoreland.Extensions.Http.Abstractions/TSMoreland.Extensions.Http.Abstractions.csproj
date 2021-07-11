@@ -17,7 +17,7 @@
     <PackageProjectUrl />
     <PackageTags>HttpClient repository</PackageTags>
     <NeutralLanguage>en-US</NeutralLanguage>
-    <RepositoryUrl>https://github.com/tsmoreland/Microsoft.Extensions.Http</RepositoryUrl>
+    <RepositoryUrl>https://github.com/tsmoreland/TSMoreland.Extensions.Http</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
