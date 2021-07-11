@@ -15,7 +15,7 @@ using System;
 using System.Collections.Generic;
 using System.Net.Http;
 
-namespace TSMoreland.Extensions.Http
+namespace TSMoreland.Extensions.Http.Abstractions
 {
     public interface IHttpMessageHandlerBuilder<T>
     {

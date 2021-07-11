@@ -12,7 +12,6 @@ namespace TSMoreland.Extensions.Http.Internal
     /// <remarks>
     /// Copied from
     /// https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Http/src/LifetimeTrackingHttpMessageHandler.cs
-    /// modified to include Proxy Settings... maybe
     /// </remarks>
     internal sealed class LifetimeTrackingProxiedHttpMessageHandler : DelegatingHandler
     {

@@ -20,6 +20,7 @@ using System.Net.Http;
 using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using TSMoreland.Extensions.Http.Abstractions;
 using TSMoreland.Extensions.Http.Internal;
 using TSMoreland.GuardAssertions;
 
