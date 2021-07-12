@@ -16,7 +16,13 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.Abstractions.Tests", "TSMoreland.Extensions.Http.Abstractions.Tests\TSMoreland.Extensions.Http.Abstractions.Tests.csproj", "{D0F2F37E-70C1-4749-9D91-FEC53BF6E42C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http.DependencyInjection", "TSMoreland.Extensions.Http.DependencyInjection\TSMoreland.Extensions.Http.DependencyInjection.csproj", "{7423FCFC-9AA5-452E-B7F4-EDA0A75107F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.DependencyInjection", "TSMoreland.Extensions.Http.DependencyInjection\TSMoreland.Extensions.Http.DependencyInjection.csproj", "{7423FCFC-9AA5-452E-B7F4-EDA0A75107F4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Abstractions", "Abstractions", "{F8FB695B-D38A-4EF4-8190-1FA76E3FC5E4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Services", "Services", "{2D054E2D-28CF-473B-9A4D-9F320782F513}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "DependencyInjection", "DependencyInjection", "{6E1D6D5F-AF84-468C-A44B-2F13DC6C559E}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -47,6 +53,13 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{E8D415E9-DB81-4F5D-ACA3-1AE37CCCE6CC} = {2D054E2D-28CF-473B-9A4D-9F320782F513}
+		{B956F470-57C0-41CD-9F37-1F819E9EC0FC} = {2D054E2D-28CF-473B-9A4D-9F320782F513}
+		{5FE8BD73-0295-448C-A3E4-9D3CDFBB10CE} = {F8FB695B-D38A-4EF4-8190-1FA76E3FC5E4}
+		{D0F2F37E-70C1-4749-9D91-FEC53BF6E42C} = {F8FB695B-D38A-4EF4-8190-1FA76E3FC5E4}
+		{7423FCFC-9AA5-452E-B7F4-EDA0A75107F4} = {6E1D6D5F-AF84-468C-A44B-2F13DC6C559E}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3D00E5D7-51C8-41E1-89EA-09B0030387BD}
