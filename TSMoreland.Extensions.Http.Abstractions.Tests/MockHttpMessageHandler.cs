@@ -17,7 +17,7 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TSMoreland.Extensions.Http.Tests
+namespace TSMoreland.Extensions.Http.Abstractions.Tests
 {
     public sealed class MockHttpMessageHandler<T> : HttpMessageHandler
     {

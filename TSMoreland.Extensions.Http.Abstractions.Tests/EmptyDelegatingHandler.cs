@@ -10,10 +10,11 @@
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
 // WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
+
 using System.Diagnostics;
 using System.Net.Http;
 
-namespace TSMoreland.Extensions.Http.Tests
+namespace TSMoreland.Extensions.Http.Abstractions.Tests
 {
     [DebuggerDisplay("{Id}")]
     public class EmptyDelegatingHandler : DelegatingHandler

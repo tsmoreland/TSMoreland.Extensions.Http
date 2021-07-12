@@ -278,7 +278,7 @@ namespace TSMoreland.Extensions.Http.Tests
         public void CreateClient_WithArgument_BuildsHandlerUsingArgument_WhenNamedClientBuilderReturnsHandler()
         {
             const string argument = "beta";
-            var expectedInnerHandler = new MockHttpMessageHandler<object>(argument);
+            var expectedInnerHandler = Mock.Of<HttpMessageHandler>();
             Mock<Func<object, IServiceProvider, HttpMessageHandler>> configuerer = new();
             configuerer
                 .Setup(b => b.Invoke(argument, _serviceProvider.Object))
