@@ -18,7 +18,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.DependencyInjection", "TSMoreland.Extensions.Http.DependencyInjection\TSMoreland.Extensions.Http.DependencyInjection.csproj", "{7423FCFC-9AA5-452E-B7F4-EDA0A75107F4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http.DependencyInjection.Tests", "TSMoreland.Extensions.Http.DependencyInjection.Tests\TSMoreland.Extensions.Http.DependencyInjection.Tests.csproj", "{D2E3378A-FAA8-46D9-B761-46E8032C069A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.DependencyInjection.Tests", "TSMoreland.Extensions.Http.DependencyInjection.Tests\TSMoreland.Extensions.Http.DependencyInjection.Tests.csproj", "{D2E3378A-FAA8-46D9-B761-46E8032C069A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http.Polly", "TSMoreland.Extensions.Http.Polly\TSMoreland.Extensions.Http.Polly.csproj", "{F52E2064-662D-4922-BC66-83B760A3B591}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http.Polly.Tests", "TSMoreland.Extensions.Http.Polly.Tests\TSMoreland.Extensions.Http.Polly.Tests.csproj", "{7E2F7B2C-EADE-4349-9AFF-8BA3B4FE4E95}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -50,6 +54,14 @@ Global
 		{D2E3378A-FAA8-46D9-B761-46E8032C069A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D2E3378A-FAA8-46D9-B761-46E8032C069A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D2E3378A-FAA8-46D9-B761-46E8032C069A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F52E2064-662D-4922-BC66-83B760A3B591}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F52E2064-662D-4922-BC66-83B760A3B591}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F52E2064-662D-4922-BC66-83B760A3B591}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F52E2064-662D-4922-BC66-83B760A3B591}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E2F7B2C-EADE-4349-9AFF-8BA3B4FE4E95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E2F7B2C-EADE-4349-9AFF-8BA3B4FE4E95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E2F7B2C-EADE-4349-9AFF-8BA3B4FE4E95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E2F7B2C-EADE-4349-9AFF-8BA3B4FE4E95}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
