@@ -36,6 +36,18 @@ namespace TSMoreland.Extensions.Http.Polly
         /// <para>
         /// See the remarks on <see cref="PolicyHttpMessageHandler"/> for guidance on configuring policies.
         /// </para>
+        /// <para>
+        /// Modified from source found at
+        /// <a href="https://github.com/dotnet/aspnetcore/blob/2105ef1ceb87dcd1d7bf6afbab9b3e6868ccd3bf/src/HttpClientFactory/Polly/src/DependencyInjection/PollyHttpClientBuilderExtensions.cs#L18">
+        /// PollyHttpClientBuilderExtensions.cs
+        /// </a>
+        /// Provided with the following license agreement:
+        /// </para>
+        /// <para>
+        /// Licensed to the .NET Foundation under one or more agreements<br/>
+        /// The .NET Foundation licenses this file to you under the MIT license.<br/>
+        /// See the LICENSE file in the project root for more information.
+        /// </para>
         /// </remarks>
         public static IHttpMessageHandlerBuilder<T> AddPolicyHandler<T>(this IHttpMessageHandlerBuilder<T> builder, 
             IAsyncPolicy<HttpResponseMessage> policy)
@@ -58,6 +70,18 @@ namespace TSMoreland.Extensions.Http.Polly
         /// <remarks>
         /// <para>
         /// See the remarks on <see cref="PolicyHttpMessageHandler"/> for guidance on configuring policies.
+        /// </para>
+        /// <para>
+        /// Modified from source found at
+        /// <a href="https://github.com/dotnet/aspnetcore/blob/2105ef1ceb87dcd1d7bf6afbab9b3e6868ccd3bf/src/HttpClientFactory/Polly/src/DependencyInjection/PollyHttpClientBuilderExtensions.cs#L18">
+        /// PollyHttpClientBuilderExtensions.cs
+        /// </a>
+        /// Provided with the following license agreement:
+        /// </para>
+        /// <para>
+        /// Licensed to the .NET Foundation under one or more agreements<br/>
+        /// The .NET Foundation licenses this file to you under the MIT license.<br/>
+        /// See the LICENSE file in the project root for more information.
         /// </para>
         /// </remarks>
         public static IHttpMessageHandlerBuilder<T> AddPolicyHandler<T>(
@@ -82,6 +106,18 @@ namespace TSMoreland.Extensions.Http.Polly
         /// <remarks>
         /// <para>
         /// See the remarks on <see cref="PolicyHttpMessageHandler"/> for guidance on configuring policies.
+        /// </para>
+        /// <para>
+        /// Modified from source found at
+        /// <a href="https://github.com/dotnet/aspnetcore/blob/2105ef1ceb87dcd1d7bf6afbab9b3e6868ccd3bf/src/HttpClientFactory/Polly/src/DependencyInjection/PollyHttpClientBuilderExtensions.cs#L18">
+        /// PollyHttpClientBuilderExtensions.cs
+        /// </a>
+        /// Provided with the following license agreement:
+        /// </para>
+        /// <para>
+        /// Licensed to the .NET Foundation under one or more agreements<br/>
+        /// The .NET Foundation licenses this file to you under the MIT license.<br/>
+        /// See the LICENSE file in the project root for more information.
         /// </para>
         /// </remarks>
         public static IHttpMessageHandlerBuilder<T> AddPolicyHandler<T>(
@@ -109,6 +145,18 @@ namespace TSMoreland.Extensions.Http.Polly
         /// <remarks>
         /// <para>
         /// See the remarks on <see cref="PolicyHttpMessageHandler"/> for guidance on configuring policies.
+        /// </para>
+        /// <para>
+        /// Modified from source found at
+        /// <a href="https://github.com/dotnet/aspnetcore/blob/2105ef1ceb87dcd1d7bf6afbab9b3e6868ccd3bf/src/HttpClientFactory/Polly/src/DependencyInjection/PollyHttpClientBuilderExtensions.cs#L18">
+        /// PollyHttpClientBuilderExtensions.cs
+        /// </a>
+        /// Provided with the following license agreement:
+        /// </para>
+        /// <para>
+        /// Licensed to the .NET Foundation under one or more agreements<br/>
+        /// The .NET Foundation licenses this file to you under the MIT license.<br/>
+        /// See the LICENSE file in the project root for more information.
         /// </para>
         /// </remarks>
         public static IHttpMessageHandlerBuilder<T> AddPolicyHandlerFromRegistry<T>(this IHttpMessageHandlerBuilder<T> builder, 
@@ -140,6 +188,18 @@ namespace TSMoreland.Extensions.Http.Polly
         /// <remarks>
         /// <para>
         /// See the remarks on <see cref="PolicyHttpMessageHandler"/> for guidance on configuring policies.
+        /// </para>
+        /// <para>
+        /// Modified from source found at
+        /// <a href="https://github.com/dotnet/aspnetcore/blob/2105ef1ceb87dcd1d7bf6afbab9b3e6868ccd3bf/src/HttpClientFactory/Polly/src/DependencyInjection/PollyHttpClientBuilderExtensions.cs#L18">
+        /// PollyHttpClientBuilderExtensions.cs
+        /// </a>
+        /// Provided with the following license agreement:
+        /// </para>
+        /// <para>
+        /// Licensed to the .NET Foundation under one or more agreements<br/>
+        /// The .NET Foundation licenses this file to you under the MIT license.<br/>
+        /// See the LICENSE file in the project root for more information.
         /// </para>
         /// </remarks>
         public static IHttpMessageHandlerBuilder<T> AddPolicyHandlerFromRegistry<T>(
@@ -182,6 +242,18 @@ namespace TSMoreland.Extensions.Http.Polly
         /// are generally designed to act as singletons, and can be shared when appropriate. To share a policy across multiple
         /// named clients, first create the policy and then pass it to multiple calls to 
         /// <see cref="AddPolicyHandler{T}(IHttpMessageHandlerBuilder{T}, IAsyncPolicy{HttpResponseMessage})"/> as desired.
+        /// </para>
+        /// <para>
+        /// Modified from source found at
+        /// <a href="https://github.com/dotnet/aspnetcore/blob/2105ef1ceb87dcd1d7bf6afbab9b3e6868ccd3bf/src/HttpClientFactory/Polly/src/DependencyInjection/PollyHttpClientBuilderExtensions.cs#L18">
+        /// PollyHttpClientBuilderExtensions.cs
+        /// </a>
+        /// Provided with the following license agreement:
+        /// </para>
+        /// <para>
+        /// Licensed to the .NET Foundation under one or more agreements<br/>
+        /// The .NET Foundation licenses this file to you under the MIT license.<br/>
+        /// See the LICENSE file in the project root for more information.
         /// </para>
         /// </remarks>
         public static IHttpMessageHandlerBuilder<T> AddTransientHttpErrorPolicy<T>(
