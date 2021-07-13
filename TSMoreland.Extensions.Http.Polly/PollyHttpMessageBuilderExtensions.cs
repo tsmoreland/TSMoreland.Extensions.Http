@@ -19,6 +19,7 @@ using Polly;
 using Polly.Extensions.Http;
 using Polly.Registry;
 using TSMoreland.Extensions.Http.Abstractions;
+using TSMoreland.GuardAssertions;
 
 namespace TSMoreland.Extensions.Http.Polly
 {
@@ -36,17 +37,11 @@ namespace TSMoreland.Extensions.Http.Polly
         /// See the remarks on <see cref="PolicyHttpMessageHandler"/> for guidance on configuring policies.
         /// </para>
         /// </remarks>
-        public static IHttpMessageHandlerBuilder<T> AddPolicyHandler<T>(this IHttpMessageHandlerBuilder<T> builder, IAsyncPolicy<HttpResponseMessage> policy)
+        public static IHttpMessageHandlerBuilder<T> AddPolicyHandler<T>(this IHttpMessageHandlerBuilder<T> builder, 
+            IAsyncPolicy<HttpResponseMessage> policy)
         {
-            if (builder == null)
-            {
-                throw new ArgumentNullException(nameof(builder));
-            }
-
-            if (policy == null)
-            {
-                throw new ArgumentNullException(nameof(policy));
-            }
+            Guard.Against.ArgumentNull(builder, nameof(builder));
+            Guard.Against.ArgumentNull(policy, nameof(policy));
 
             return builder.AddHttpMessageHandler((_, _) => new PolicyHttpMessageHandler(policy));
         }
@@ -69,15 +64,8 @@ namespace TSMoreland.Extensions.Http.Polly
             this IHttpMessageHandlerBuilder<T> builder, 
             Func<HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>> policySelector)
         {
-            if (builder == null)
-            {
-                throw new ArgumentNullException(nameof(builder));
-            }
-
-            if (policySelector == null)
-            {
-                throw new ArgumentNullException(nameof(policySelector));
-            }
+            Guard.Against.ArgumentNull(builder, nameof(builder));
+            Guard.Against.ArgumentNull(policySelector, nameof(policySelector));
 
             return builder.AddHttpMessageHandler((_, _) => new PolicyHttpMessageHandler(policySelector));
         }
@@ -100,15 +88,8 @@ namespace TSMoreland.Extensions.Http.Polly
             this IHttpMessageHandlerBuilder<T> builder,
             Func<IServiceProvider, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>> policySelector)
         {
-            if (builder == null)
-            {
-                throw new ArgumentNullException(nameof(builder));
-            }
-
-            if (policySelector == null)
-            {
-                throw new ArgumentNullException(nameof(policySelector));
-            }
+            Guard.Against.ArgumentNull(builder, nameof(builder));
+            Guard.Against.ArgumentNull(policySelector, nameof(policySelector));
 
             return builder.AddHttpMessageHandler((_, services) =>
             {
@@ -130,17 +111,11 @@ namespace TSMoreland.Extensions.Http.Polly
         /// See the remarks on <see cref="PolicyHttpMessageHandler"/> for guidance on configuring policies.
         /// </para>
         /// </remarks>
-        public static IHttpMessageHandlerBuilder<T> AddPolicyHandlerFromRegistry<T>(this IHttpMessageHandlerBuilder<T> builder, string policyKey)
+        public static IHttpMessageHandlerBuilder<T> AddPolicyHandlerFromRegistry<T>(this IHttpMessageHandlerBuilder<T> builder, 
+            string policyKey)
         {
-            if (builder == null)
-            {
-                throw new ArgumentNullException(nameof(builder));
-            }
-
-            if (policyKey == null)
-            {
-                throw new ArgumentNullException(nameof(policyKey));
-            }
+            Guard.Against.ArgumentNull(builder, nameof(builder));
+            Guard.Against.ArgumentNull(policyKey, nameof(policyKey));
 
             return builder.AddHttpMessageHandler((_, services) =>
             {
@@ -171,15 +146,8 @@ namespace TSMoreland.Extensions.Http.Polly
             this IHttpMessageHandlerBuilder<T> builder,
             Func<IReadOnlyPolicyRegistry<string>, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>> policySelector)
         {
-            if (builder == null)
-            {
-                throw new ArgumentNullException(nameof(builder));
-            }
-
-            if (policySelector == null)
-            {
-                throw new ArgumentNullException(nameof(policySelector));
-            }
+            Guard.Against.ArgumentNull(builder, nameof(builder));
+            Guard.Against.ArgumentNull(policySelector, nameof(policySelector));
 
             return builder.AddHttpMessageHandler((_, services) =>
             {
@@ -220,15 +188,8 @@ namespace TSMoreland.Extensions.Http.Polly
             this IHttpMessageHandlerBuilder<T> builder, 
             Func<PolicyBuilder<HttpResponseMessage>, IAsyncPolicy<HttpResponseMessage>> configurePolicy)
         {
-            if (builder == null)
-            {
-                throw new ArgumentNullException(nameof(builder));
-            }
-
-            if (configurePolicy == null)
-            {
-                throw new ArgumentNullException(nameof(configurePolicy));
-            }
+            Guard.Against.ArgumentNull(builder, nameof(builder));
+            Guard.Against.ArgumentNull(configurePolicy, nameof(configurePolicy));
             
             var policyBuilder = HttpPolicyExtensions.HandleTransientHttpError();
 
