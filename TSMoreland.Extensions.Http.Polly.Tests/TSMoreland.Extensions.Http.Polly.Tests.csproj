@@ -1,8 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net5.0</TargetFramework>
+
     <IsPackable>false</IsPackable>
+
     <nullable>enable</nullable>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\TSMoreland.Extensions.Http.snk</AssemblyOriginatorKeyFile>
@@ -29,6 +31,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\TSMoreland.Extensions.Http.Polly\TSMoreland.Extensions.Http.Polly.csproj" />
     <ProjectReference Include="..\TSMoreland.Extensions.Http\TSMoreland.Extensions.Http.csproj" />
   </ItemGroup>
 

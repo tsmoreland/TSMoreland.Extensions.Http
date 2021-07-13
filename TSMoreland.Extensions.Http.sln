@@ -12,7 +12,17 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.Tests", "TSMoreland.Extensions.Http.Tests\TSMoreland.Extensions.Http.Tests.csproj", "{B956F470-57C0-41CD-9F37-1F819E9EC0FC}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http.Abstractions", "TSMoreland.Extensions.Http.Abstractions\TSMoreland.Extensions.Http.Abstractions.csproj", "{5FE8BD73-0295-448C-A3E4-9D3CDFBB10CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.Abstractions", "TSMoreland.Extensions.Http.Abstractions\TSMoreland.Extensions.Http.Abstractions.csproj", "{5FE8BD73-0295-448C-A3E4-9D3CDFBB10CE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.Abstractions.Tests", "TSMoreland.Extensions.Http.Abstractions.Tests\TSMoreland.Extensions.Http.Abstractions.Tests.csproj", "{D0F2F37E-70C1-4749-9D91-FEC53BF6E42C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.DependencyInjection", "TSMoreland.Extensions.Http.DependencyInjection\TSMoreland.Extensions.Http.DependencyInjection.csproj", "{7423FCFC-9AA5-452E-B7F4-EDA0A75107F4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.DependencyInjection.Tests", "TSMoreland.Extensions.Http.DependencyInjection.Tests\TSMoreland.Extensions.Http.DependencyInjection.Tests.csproj", "{D2E3378A-FAA8-46D9-B761-46E8032C069A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http.Polly", "TSMoreland.Extensions.Http.Polly\TSMoreland.Extensions.Http.Polly.csproj", "{F52E2064-662D-4922-BC66-83B760A3B591}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http.Polly.Tests", "TSMoreland.Extensions.Http.Polly.Tests\TSMoreland.Extensions.Http.Polly.Tests.csproj", "{7E2F7B2C-EADE-4349-9AFF-8BA3B4FE4E95}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -32,6 +42,26 @@ Global
 		{5FE8BD73-0295-448C-A3E4-9D3CDFBB10CE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5FE8BD73-0295-448C-A3E4-9D3CDFBB10CE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5FE8BD73-0295-448C-A3E4-9D3CDFBB10CE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D0F2F37E-70C1-4749-9D91-FEC53BF6E42C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0F2F37E-70C1-4749-9D91-FEC53BF6E42C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0F2F37E-70C1-4749-9D91-FEC53BF6E42C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0F2F37E-70C1-4749-9D91-FEC53BF6E42C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7423FCFC-9AA5-452E-B7F4-EDA0A75107F4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7423FCFC-9AA5-452E-B7F4-EDA0A75107F4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7423FCFC-9AA5-452E-B7F4-EDA0A75107F4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7423FCFC-9AA5-452E-B7F4-EDA0A75107F4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D2E3378A-FAA8-46D9-B761-46E8032C069A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D2E3378A-FAA8-46D9-B761-46E8032C069A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D2E3378A-FAA8-46D9-B761-46E8032C069A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D2E3378A-FAA8-46D9-B761-46E8032C069A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F52E2064-662D-4922-BC66-83B760A3B591}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F52E2064-662D-4922-BC66-83B760A3B591}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F52E2064-662D-4922-BC66-83B760A3B591}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F52E2064-662D-4922-BC66-83B760A3B591}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7E2F7B2C-EADE-4349-9AFF-8BA3B4FE4E95}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7E2F7B2C-EADE-4349-9AFF-8BA3B4FE4E95}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7E2F7B2C-EADE-4349-9AFF-8BA3B4FE4E95}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7E2F7B2C-EADE-4349-9AFF-8BA3B4FE4E95}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

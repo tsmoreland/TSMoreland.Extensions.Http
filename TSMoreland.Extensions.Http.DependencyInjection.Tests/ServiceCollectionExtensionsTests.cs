@@ -10,19 +10,33 @@
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, 
 // WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 // 
-using System.Diagnostics;
-using System.Net.Http;
 
-namespace TSMoreland.Extensions.Http.Tests
+using System;
+using Microsoft.Extensions.DependencyInjection;
+using Moq;
+using NUnit.Framework;
+
+namespace TSMoreland.Extensions.Http.DependencyInjection.Tests
 {
-    [DebuggerDisplay("{Id}")]
-    public class EmptyDelegatingHandler : DelegatingHandler
+    [TestFixture]
+    public sealed class ServiceCollectionExtensionsTests
     {
-        public int Id { get; }
+        private Mock<IServiceCollection> _services = null!;
 
-        public EmptyDelegatingHandler(int id)
+        [SetUp]
+        public void SetUp()
         {
-            Id = id;
+            _services = new Mock<IServiceCollection>();
         }
+
+        [Test]
+        public void AddHttpClientRepository_ThrowsArgumentNullException_WhenServicesIsNull()
+        {
+            IServiceCollection services = null!;
+
+            var ex = Assert.Throws<ArgumentNullException>(() => _ = services.AddHttpClientRepository<object>());
+            Assert.That(ex!.ParamName, Is.EqualTo(nameof(services)));
+        }
+
     }
 }

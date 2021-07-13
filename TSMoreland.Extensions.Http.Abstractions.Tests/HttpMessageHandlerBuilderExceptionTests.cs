@@ -12,9 +12,8 @@
 // 
 using System;
 using NUnit.Framework;
-using TSMoreland.Extensions.Http.Abstractions;
 
-namespace TSMoreland.Extensions.Http.Tests
+namespace TSMoreland.Extensions.Http.Abstractions.Tests
 {
     [TestFixture]
     public sealed class HttpMessageHandlerBuilderExceptionTests

@@ -12,16 +12,12 @@
 // 
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
-using System.Runtime.CompilerServices;
-using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NUnit.Framework;
-using TSMoreland.Extensions.Http.Abstractions;
 
-namespace TSMoreland.Extensions.Http.Tests
+namespace TSMoreland.Extensions.Http.Abstractions.Tests
 {
     [TestFixture]
     public sealed class DefaultHttpMessageHandlerBuilderTests

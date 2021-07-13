@@ -8,12 +8,12 @@
     <nullable>enable</nullable>
 
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <Version>1.0.1</Version>
+    <Version>1.0.0</Version>
     <Description>Interface and other Abstractions for TSMoreland.Extensions.Http</Description>
     <Copyright>Copyright © 2021 Terry Moreland</Copyright>
     <Product>TSMoreland.GuardAssertions</Product>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageDescription>Interface and other Abstractions for TSMoreland.Extensions.Http.</PackageDescription>
+    <PackageDescription>Interface and other Abstractions for TSMoreland.Extensions.Http using IServicesCollection.</PackageDescription>
     <PackageProjectUrl />
     <PackageTags>HttpClient repository</PackageTags>
     <NeutralLanguage>en-US</NeutralLanguage>
@@ -39,8 +39,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.Extensions.Http" Version="5.0.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
     <PackageReference Include="TSMoreland.GuardAssertions" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(Configuration)=='Release'">
+    <PackageReference Include="TSMoreland.Extensions.Http" Version="1.0.0" />
+  </ItemGroup>
+
+  <ItemGroup Condition="$(Configuration)=='Debug'">
+    <ProjectReference Include="..\TSMoreland.Extensions.Http\TSMoreland.Extensions.Http.csproj" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
@@ -57,4 +65,6 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.SourceLink.GitHub" Version="1.0.0" PrivateAssets="All" />
   </ItemGroup>
+
+
 </Project>
