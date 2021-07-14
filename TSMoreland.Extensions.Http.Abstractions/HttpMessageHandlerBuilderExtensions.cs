@@ -36,7 +36,7 @@ namespace TSMoreland.Extensions.Http.Abstractions
         /// </summary>
         /// <param name="builder">The <see cref="IHttpMessageHandlerBuilder{T}"/>.</param>
         /// <param name="configureHandler">A delegate that is used to create a <see cref="DelegatingHandler"/>.</param>
-        /// <returns>An <see cref="IHttpMessageHandlerBuilder{T"/> that can be used to configure the client.</returns>
+        /// <returns>An <see cref="IHttpMessageHandlerBuilder{T}"/> that can be used to configure the client.</returns>
         /// <remarks>
         /// <para>
         /// The <see paramref="configureHandler"/> delegate should return a new instance of the message handler each time it
