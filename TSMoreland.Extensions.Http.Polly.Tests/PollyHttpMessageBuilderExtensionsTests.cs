@@ -12,8 +12,12 @@
 // 
 
 using System;
+using System.Net;
 using System.Net.Http;
+using System.Threading;
+using System.Threading.Tasks;
 using Moq;
+using Moq.Protected;
 using NUnit.Framework;
 using Polly;
 using Polly.Registry;
@@ -30,10 +34,17 @@ namespace TSMoreland.Extensions.Http.Polly.Tests
         private Mock<Func<IServiceProvider, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>> _policySelectorWithServices = null!;
         private Mock<Func<IReadOnlyPolicyRegistry<string>, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>> _registryPolicySelector = null!;
         private Mock<Func<PolicyBuilder<HttpResponseMessage>, IAsyncPolicy<HttpResponseMessage>>> _configurePolicy = null!;
+        private Mock<HttpMessageHandler> _messageHandler = null!;
 
         [SetUp]
         public void SetUp()
         {
+            _messageHandler = new Mock<HttpMessageHandler>();
+            _messageHandler
+                .Protected()
+                .Setup<Task<HttpResponseMessage>>("SendAsync", ItExpr.IsAny<HttpRequestMessage>(), ItExpr.IsAny<CancellationToken>())
+                .Returns(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)));
+
             _builder = new Mock<IHttpMessageHandlerBuilder<object>>();
             _policy = new Mock<IAsyncPolicy<HttpResponseMessage>>();
             _policySelector = new Mock<Func<HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>>();
@@ -52,12 +63,40 @@ namespace TSMoreland.Extensions.Http.Polly.Tests
             var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddPolicyHandler(_policy.Object));
             Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
         }
+
         [Test]
         public void AddPolicyHandler_FromPolicy_ThrowsArgumentNullException_WhenPolicyIsNull()
         {
             IAsyncPolicy<HttpResponseMessage> policy = null!;
             var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddPolicyHandler(policy));
             Assert.That(ex!.ParamName, Is.EqualTo(nameof(policy)));
+        }
+
+        [Test]
+        public void AddPolicyHandle_FromPolicy_AddsHandler_WhenArgumentsAreValid()
+        {
+            var builder = new MockHttpMessageHandlerBuilder<object>();
+            builder.AddPolicyHandler(_policy.Object);
+
+            Assert.That(builder.AdditionalHandlers.Count, Is.EqualTo(1));
+        }
+
+        [Test]
+        public async Task AddPolicyHandle_FromPolicy_ConfiguresHandler_WhenArgumentsAreValid()
+        {
+            // Arrange
+            _policy
+                .Setup(p => p.ExecuteAsync(It.IsAny<Func<Context, CancellationToken, Task<HttpResponseMessage>>>(), It.IsAny<Context>(), It.IsAny<CancellationToken>()))
+                .Returns(() => Task.FromResult(new HttpResponseMessage(HttpStatusCode.NotFound)));
+            using var client = SetupHttpClient(out var request);
+
+            // Act
+            _ = await client.SendAsync(request);
+
+            // Assert
+            _policy.Verify(
+                p => p.ExecuteAsync(It.IsAny<Func<Context, CancellationToken, Task<HttpResponseMessage>>>(), It.IsAny<Context>(), It.IsAny<CancellationToken>()), 
+                Times.Once);
         }
 
         [Test]
@@ -139,5 +178,19 @@ namespace TSMoreland.Extensions.Http.Polly.Tests
             var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddTransientHttpErrorPolicy(configurePolicy));
             Assert.That(ex!.ParamName, Is.EqualTo(nameof(configurePolicy)));
         }
+
+        private HttpClient SetupHttpClient(out HttpRequestMessage request)
+        {
+            var serviceProvider = Mock.Of<IServiceProvider>();
+            var builder = new DefaultHttpMessageHandlerBuilder<object>("default")
+                .AddPolicyHandler(_policy.Object)
+                .ConfigurePrimaryHandler((_,_) => _messageHandler.Object);
+            var context = new Context("opKey");
+            request = new HttpRequestMessage(HttpMethod.Get, "http://example.com");
+            request.SetPolicyExecutionContext(context);
+
+            return new HttpClient(builder.Build(new object(), serviceProvider));
+        }
+
     }
 }
