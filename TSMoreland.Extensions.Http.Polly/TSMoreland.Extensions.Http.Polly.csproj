@@ -5,7 +5,7 @@
     <Authors>Terry Moreland</Authors>
     <Company />
     <langversion>9</langversion>
-    <nullable>enable</nullable>
+    <LangVersion>10</LangVersion>
     <Description>Extenson to Microsoft.Extensions.Http adding an alternate HttpClientFactory by composition adding dynamic support for proxy based HttpClients which may be created and removed at runtime</Description>
     <Copyright>Copyright © 2021 Terry Moreland</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>

@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Terry Moreland</Authors>
     <Company />
-    <langversion>9</langversion>
+    <LangVersion>10</LangVersion>
     <nullable>enable</nullable>
     <Description>Extenson to Microsoft.Extensions.Http adding an alternate HttpClientFactory by composition adding dynamic support for proxy based HttpClients which may be created and removed at runtime</Description>
     <Copyright>Copyright © 2021 Terry Moreland</Copyright>

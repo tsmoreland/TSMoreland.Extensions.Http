@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Terry Moreland</Authors>
     <Company />
-    <langversion>9</langversion>
+    <LangVersion>10</LangVersion>
     <nullable>enable</nullable>
 
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
