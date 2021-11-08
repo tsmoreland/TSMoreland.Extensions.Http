@@ -71,3 +71,6 @@ dotnet_naming_rule.instance_fields_should_be_camel_case.style = instance_field_s
 dotnet_naming_symbols.instance_fields.applicable_kinds = field
 dotnet_naming_style.instance_field_style.capitalization = camel_case
 dotnet_naming_style.instance_field_style.required_prefix = _
+
+# S3903: Types should be defined in named namespaces
+dotnet_diagnostic.S3903.severity = silent
