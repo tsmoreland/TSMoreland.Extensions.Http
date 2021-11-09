@@ -14,16 +14,15 @@
 using System.Diagnostics;
 using System.Net.Http;
 
-namespace TSMoreland.Extensions.Http.Abstractions.Tests
-{
-    [DebuggerDisplay("{Id}")]
-    public class EmptyDelegatingHandler : DelegatingHandler
-    {
-        public int Id { get; }
+namespace TSMoreland.Extensions.Http.Abstractions.Tests;
 
-        public EmptyDelegatingHandler(int id)
-        {
-            Id = id;
-        }
+[DebuggerDisplay("{Id}")]
+public class EmptyDelegatingHandler : DelegatingHandler
+{
+    public int Id { get; }
+
+    public EmptyDelegatingHandler(int id)
+    {
+        Id = id;
     }
 }

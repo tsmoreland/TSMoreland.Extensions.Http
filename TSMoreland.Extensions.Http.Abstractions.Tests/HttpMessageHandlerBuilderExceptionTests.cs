@@ -13,59 +13,53 @@
 using System;
 using NUnit.Framework;
 
-namespace TSMoreland.Extensions.Http.Abstractions.Tests
+namespace TSMoreland.Extensions.Http.Abstractions.Tests;
+
+[TestFixture]
+public sealed class HttpMessageHandlerBuilderExceptionTests
 {
-    [TestFixture]
-    public sealed class HttpMessageHandlerBuilderExceptionTests
+    [Test]
+    public void Message_ReturnsEmpty_WhenDefaultConstructed()
     {
-        [SetUp]
-        public void Setup()
-        {
-        }
+        var ex = new HttpMessageHandlerBuilderException();
+        Assert.That(ex.Message, Is.Not.Empty);
+    }
 
-        [Test]
-        public void Message_ReturnsEmpty_WhenDefaultConstructed()
-        {
-            var ex = new HttpMessageHandlerBuilderException();
-            Assert.That(ex.Message, Is.Not.Empty);
-        }
+    /// <summary>
+    /// overkill test but meh, going for coverage
+    /// </summary>
+    [Test]
+    public void Message_ReturnsExpectedValue_WhenConstructedWithMessage()
+    {
+        const string message = "sample message";
 
-        /// <summary>
-        /// overkill test but meh, going for coverage
-        /// </summary>
-        [Test]
-        public void Message_ReturnsExpectedValue_WhenConstructedWithMessage()
-        {
-            const string message = "sample message";
+        var ex = new HttpMessageHandlerBuilderException(message);
 
-            var ex = new HttpMessageHandlerBuilderException(message);
+        Assert.That(ex.Message, Is.EqualTo(message));
+    }
 
-            Assert.That(ex.Message, Is.EqualTo(message));
-        }
+    /// <summary>
+    /// overkill test but meh, going for coverage
+    /// </summary>
+    [Test]
+    public void Message_ReturnsExpectedValue_WhenConstructedWithMessageAndInnerException()
+    {
+        const string message = "sample message";
+        var inner = new Exception("Inner Exception");
 
-        /// <summary>
-        /// overkill test but meh, going for coverage
-        /// </summary>
-        [Test]
-        public void Message_ReturnsExpectedValue_WhenConstructedWithMessageAndInnerException()
-        {
-            const string message = "sample message";
-            var inner = new Exception("Inner Exception");
+        var ex = new HttpMessageHandlerBuilderException(message, inner);
 
-            var ex = new HttpMessageHandlerBuilderException(message, inner);
+        Assert.That(ex.Message, Is.EqualTo(message));
+    }
 
-            Assert.That(ex.Message, Is.EqualTo(message));
-        }
+    [Test]
+    public void InnerException_ReturnsExpectedValue_WhenConstructedWithMessageAndInnerException()
+    {
+        const string message = "sample message";
+        var inner = new Exception("Inner Exception");
 
-        [Test]
-        public void InnerException_ReturnsExpectedValue_WhenConstructedWithMessageAndInnerException()
-        {
-            const string message = "sample message";
-            var inner = new Exception("Inner Exception");
+        var ex = new HttpMessageHandlerBuilderException(message, inner);
 
-            var ex = new HttpMessageHandlerBuilderException(message, inner);
-
-            Assert.That(ex.InnerException, Is.EqualTo(inner));
-        }
+        Assert.That(ex.InnerException, Is.EqualTo(inner));
     }
 }

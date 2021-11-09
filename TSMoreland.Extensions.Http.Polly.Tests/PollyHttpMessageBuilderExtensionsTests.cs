@@ -19,125 +19,124 @@ using Polly;
 using Polly.Registry;
 using TSMoreland.Extensions.Http.Abstractions;
 
-namespace TSMoreland.Extensions.Http.Polly.Tests
+namespace TSMoreland.Extensions.Http.Polly.Tests;
+
+[TestFixture]
+public sealed class PollyHttpMessageBuilderExtensionsTests
 {
-    [TestFixture]
-    public sealed class PollyHttpMessageBuilderExtensionsTests
+    private Mock<IHttpMessageHandlerBuilder<object>> _builder = null!;
+    private Mock<IAsyncPolicy<HttpResponseMessage>> _policy = null!;
+    private Mock<Func<HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>> _policySelector = null!;
+    private Mock<Func<IServiceProvider, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>> _policySelectorWithServices = null!;
+    private Mock<Func<IReadOnlyPolicyRegistry<string>, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>> _registryPolicySelector = null!;
+    private Mock<Func<PolicyBuilder<HttpResponseMessage>, IAsyncPolicy<HttpResponseMessage>>> _configurePolicy = null!;
+
+    [SetUp]
+    public void SetUp()
     {
-        private Mock<IHttpMessageHandlerBuilder<object>> _builder = null!;
-        private Mock<IAsyncPolicy<HttpResponseMessage>> _policy = null!;
-        private Mock<Func<HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>> _policySelector = null!;
-        private Mock<Func<IServiceProvider, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>> _policySelectorWithServices = null!;
-        private Mock<Func<IReadOnlyPolicyRegistry<string>, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>> _registryPolicySelector = null!;
-        private Mock<Func<PolicyBuilder<HttpResponseMessage>, IAsyncPolicy<HttpResponseMessage>>> _configurePolicy = null!;
+        _builder = new Mock<IHttpMessageHandlerBuilder<object>>();
+        _policy = new Mock<IAsyncPolicy<HttpResponseMessage>>();
+        _policySelector = new Mock<Func<HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>>();
+        _policySelectorWithServices =
+            new Mock<Func<IServiceProvider, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>>();
+        _registryPolicySelector =
+            new Mock<Func<IReadOnlyPolicyRegistry<string>, HttpRequestMessage,
+                IAsyncPolicy<HttpResponseMessage>>>();
+        _configurePolicy = new Mock<Func<PolicyBuilder<HttpResponseMessage>, IAsyncPolicy<HttpResponseMessage>>>();
+    }
 
-        [SetUp]
-        public void SetUp()
-        {
-            _builder = new Mock<IHttpMessageHandlerBuilder<object>>();
-            _policy = new Mock<IAsyncPolicy<HttpResponseMessage>>();
-            _policySelector = new Mock<Func<HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>>();
-            _policySelectorWithServices =
-                new Mock<Func<IServiceProvider, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>>>();
-            _registryPolicySelector =
-                new Mock<Func<IReadOnlyPolicyRegistry<string>, HttpRequestMessage,
-                    IAsyncPolicy<HttpResponseMessage>>>();
-            _configurePolicy = new Mock<Func<PolicyBuilder<HttpResponseMessage>, IAsyncPolicy<HttpResponseMessage>>>();
-        }
+    [Test]
+    public void AddPolicyHandler_FromPolicy_ThrowsArgumentNullException_WhenBuilderIsNull()
+    {
+        IHttpMessageHandlerBuilder<object> builder = null!;
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddPolicyHandler(_policy.Object));
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
+    }
+    [Test]
+    public void AddPolicyHandler_FromPolicy_ThrowsArgumentNullException_WhenPolicyIsNull()
+    {
+        IAsyncPolicy<HttpResponseMessage> policy = null!;
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddPolicyHandler(policy));
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(policy)));
+    }
 
-        [Test]
-        public void AddPolicyHandler_FromPolicy_ThrowsArgumentNullException_WhenBuilderIsNull()
-        {
-            IHttpMessageHandlerBuilder<object> builder = null!;
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddPolicyHandler(_policy.Object));
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
-        }
-        [Test]
-        public void AddPolicyHandler_FromPolicy_ThrowsArgumentNullException_WhenPolicyIsNull()
-        {
-            IAsyncPolicy<HttpResponseMessage> policy = null!;
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddPolicyHandler(policy));
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(policy)));
-        }
+    [Test]
+    public void AddPolicyHandler_FromPolicySelector_ThrowsArgumentNullException_WhenBuilderIsNull()
+    {
+        IHttpMessageHandlerBuilder<object> builder = null!;
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddPolicyHandler(_policySelector.Object));
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
+    }
 
-        [Test]
-        public void AddPolicyHandler_FromPolicySelector_ThrowsArgumentNullException_WhenBuilderIsNull()
-        {
-            IHttpMessageHandlerBuilder<object> builder = null!;
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddPolicyHandler(_policySelector.Object));
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
-        }
+    [Test]
+    public void AddPolicyHandler_FromPolicySelector_ThrowsArgumentNullException_WhenPolicySelectorIsNull()
+    {
+        Func<HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>> policySelector = null!;
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddPolicyHandler(policySelector));
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(policySelector)));
+    }
 
-        [Test]
-        public void AddPolicyHandler_FromPolicySelector_ThrowsArgumentNullException_WhenPolicySelectorIsNull()
-        {
-            Func<HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>> policySelector = null!;
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddPolicyHandler(policySelector));
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(policySelector)));
-        }
+    [Test]
+    public void AddPolicyHandler_FromPolicyAndRequest_ThrowsArgumentNullException_WhenBuilderIsNull()
+    {
+        IHttpMessageHandlerBuilder<object> builder = null!;
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddPolicyHandler(_policySelectorWithServices.Object));
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
+    }
 
-        [Test]
-        public void AddPolicyHandler_FromPolicyAndRequest_ThrowsArgumentNullException_WhenBuilderIsNull()
-        {
-            IHttpMessageHandlerBuilder<object> builder = null!;
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddPolicyHandler(_policySelectorWithServices.Object));
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
-        }
+    [Test]
+    public void AddPolicyHandler_FromPolicyAndRequest_ThrowsArgumentNullException_WhenPolicySelectorIsNull()
+    {
+        Func<IServiceProvider, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>> policySelector = null!;
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddPolicyHandler(policySelector));
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(policySelector)));
+    }
 
-        [Test]
-        public void AddPolicyHandler_FromPolicyAndRequest_ThrowsArgumentNullException_WhenPolicySelectorIsNull()
-        {
-            Func<IServiceProvider, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>> policySelector = null!;
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddPolicyHandler(policySelector));
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(policySelector)));
-        }
+    [Test]
+    public void AddPolicyHandlerFromRegistry_ThrowsArgumentNullException_WhenBuilderIsNull()
+    {
+        IHttpMessageHandlerBuilder<object> builder = null!;
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddPolicyHandlerFromRegistry("key"));
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
+    }
 
-        [Test]
-        public void AddPolicyHandlerFromRegistry_ThrowsArgumentNullException_WhenBuilderIsNull()
-        {
-            IHttpMessageHandlerBuilder<object> builder = null!;
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddPolicyHandlerFromRegistry("key"));
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
-        }
+    [Test]
+    public void AddPolicyHandlerFromRegistry_ThrowsArgumentNullException_WhenPolicyKeyIsNull()
+    {
+        string policyKey = null!;
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddPolicyHandlerFromRegistry(policyKey));
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(policyKey)));
+    }
 
-        [Test]
-        public void AddPolicyHandlerFromRegistry_ThrowsArgumentNullException_WhenPolicyKeyIsNull()
-        {
-            string policyKey = null!;
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddPolicyHandlerFromRegistry(policyKey));
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(policyKey)));
-        }
+    [Test]
+    public void AddPolicyHandlerFromRegistry_FromPolicySelector_ThrowsArgumentNullException_WhenBuilderIsNull()
+    {
+        IHttpMessageHandlerBuilder<object> builder = null!;
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddPolicyHandlerFromRegistry(_registryPolicySelector.Object));
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
+    }
 
-        [Test]
-        public void AddPolicyHandlerFromRegistry_FromPolicySelector_ThrowsArgumentNullException_WhenBuilderIsNull()
-        {
-            IHttpMessageHandlerBuilder<object> builder = null!;
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddPolicyHandlerFromRegistry(_registryPolicySelector.Object));
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
-        }
+    [Test]
+    public void AddPolicyHandlerFromRegistry_FromPolicySelector_ThrowsArgumentNullException_WhensPolicySelectorNull()
+    {
+        Func<IReadOnlyPolicyRegistry<string>, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>> policySelector = null!;
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddPolicyHandlerFromRegistry(policySelector));
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(policySelector)));
+    }
 
-        [Test]
-        public void AddPolicyHandlerFromRegistry_FromPolicySelector_ThrowsArgumentNullException_WhensPolicySelectorNull()
-        {
-            Func<IReadOnlyPolicyRegistry<string>, HttpRequestMessage, IAsyncPolicy<HttpResponseMessage>> policySelector = null!;
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddPolicyHandlerFromRegistry(policySelector));
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(policySelector)));
-        }
+    [Test]
+    public void AddTransientHttpErrorPolicy_ThrowsArgumentNullException_WhenBuilderIsNull()
+    {
+        IHttpMessageHandlerBuilder<object> builder = null!;
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddTransientHttpErrorPolicy(_configurePolicy.Object));
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
+    }
 
-        [Test]
-        public void AddTransientHttpErrorPolicy_ThrowsArgumentNullException_WhenBuilderIsNull()
-        {
-            IHttpMessageHandlerBuilder<object> builder = null!;
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = builder.AddTransientHttpErrorPolicy(_configurePolicy.Object));
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(builder)));
-        }
-
-        [Test]
-        public void AddTransientHttpErrorPolicy_ThrowsArgumentNullException_WhenConfigurePolicyIsNull()
-        {
-            Func<PolicyBuilder<HttpResponseMessage>, IAsyncPolicy<HttpResponseMessage>> configurePolicy = null!;
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddTransientHttpErrorPolicy(configurePolicy));
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(configurePolicy)));
-        }
+    [Test]
+    public void AddTransientHttpErrorPolicy_ThrowsArgumentNullException_WhenConfigurePolicyIsNull()
+    {
+        Func<PolicyBuilder<HttpResponseMessage>, IAsyncPolicy<HttpResponseMessage>> configurePolicy = null!;
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = _builder.Object.AddTransientHttpErrorPolicy(configurePolicy));
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(configurePolicy)));
     }
 }

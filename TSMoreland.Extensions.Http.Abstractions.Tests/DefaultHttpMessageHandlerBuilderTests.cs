@@ -17,155 +17,154 @@ using System.Net.Http;
 using Moq;
 using NUnit.Framework;
 
-namespace TSMoreland.Extensions.Http.Abstractions.Tests
+namespace TSMoreland.Extensions.Http.Abstractions.Tests;
+
+[TestFixture]
+public sealed class DefaultHttpMessageHandlerBuilderTests
 {
-    [TestFixture]
-    public sealed class DefaultHttpMessageHandlerBuilderTests
+    private Mock<IServiceProvider> _serviceProvider = null!;
+
+
+    [SetUp]
+    public void Setup()
     {
-        private Mock<IServiceProvider> _serviceProvider = null!;
+        _serviceProvider = new Mock<IServiceProvider>();
+    }
 
+    [Test]
+    public void Constructor_ThrowsArgumentNullException_WhenNameIsNull()
+    {
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = new DefaultHttpMessageHandlerBuilder<object>(null!));
+        Assert.That(ex!.ParamName, Is.EqualTo("name"));
+    }
 
-        [SetUp]
-        public void Setup()
+    [Test]
+    public void Constructor_ThrowsArgumentException_WhenNameIsEmpty()
+    {
+        var ex = Assert.Throws<ArgumentException>(() => _ = new DefaultHttpMessageHandlerBuilder<object>(string.Empty));
+        Assert.That(ex!.ParamName, Is.EqualTo("name"));
+    }
+
+    [Test]
+    public void PrimaryHandlerFactory_ThrowsArgumentNullException_WhenSetValueIsNull()
+    {
+        var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha");
+
+        var ex = Assert.Throws<ArgumentNullException>(() => builder.PrimaryHandlerFactory = null!);
+        Assert.That(ex!.ParamName, Is.EqualTo("value"));
+    }
+
+    [Test]
+    public void PrimaryHandlerFactory_ReturnsDefaultHandler_WhenNotSet()
+    {
+        var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha");
+        Assert.That(builder.PrimaryHandlerFactory, Is.EqualTo((Func<object, IServiceProvider, HttpMessageHandler>) DefaultHttpMessageHandlerBuilder<object>.DefaultHandler));
+    }
+
+    [Test]
+    public void PrimaryHandlerFactory_ReturnsSetvalue_WhenSet()
+    {
+        var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha");
+        static HttpMessageHandler Expected(object @object, IServiceProvider _) => new MockHttpMessageHandler<object>(@object);
+
+        builder.PrimaryHandlerFactory = Expected;
+
+        Assert.That(builder.PrimaryHandlerFactory, Is.EqualTo((Func<object, IServiceProvider, HttpMessageHandler>) Expected));
+    }
+
+    [Test]
+    public void Build_ThrowsHttpMessageHandlerBuilderException_WhenPrimaryHandlerFactoryReturnsNull()
+    {
+        var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha")
+            .ConfigurePrimaryHandler((_, _) => null!);
+
+        Assert.Throws<HttpMessageHandlerBuilderException>(() =>
+            _ = builder.Build(new object(), _serviceProvider.Object));
+    }
+
+    [Test]
+    public void Build_ThrowsHttpMessageHandlerBuilderException_WhenAnyAdditionalHandlerReturnsNull()
+    {
+        var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha")
+            .AddHttpMessageHandler((_, _) => null!);
+
+        Assert.Throws<HttpMessageHandlerBuilderException>(() =>
+            _ = builder.Build(new object(), _serviceProvider.Object));
+    }
+
+    /// <summary>
+    /// like a stack the handlers are used in order of last added down to the primary handler
+    /// </summary>
+    [Test]
+    public void Build_UsesAdditionalHandlersInReverseOrder_WhenValid()
+    {
+        // Arrange
+        var expected = new[]
         {
-            _serviceProvider = new Mock<IServiceProvider>();
-        }
+            new EmptyDelegatingHandler(1),
+            new EmptyDelegatingHandler(2),
+            new EmptyDelegatingHandler(3),
+            new EmptyDelegatingHandler(4),
+        };
 
-        [Test]
-        public void Constructor_ThrowsArgumentNullException_WhenNameIsNull()
+        var primaryHandler = Mock.Of<HttpMessageHandler>();
+        var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha")
+            .ConfigurePrimaryHandler((_, _) => primaryHandler);
+        builder = expected.Aggregate(builder, (current, next) => current.AddHttpMessageHandler((_, _) => next));
+
+        // Act
+        var handler = builder.Build(new object(), Mock.Of<IServiceProvider>());
+
+        // Assert
+
+        var delegatingHandler = (DelegatingHandler) handler; 
+        for (int i = expected.Length - 1; i > 0; i--)
         {
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = new DefaultHttpMessageHandlerBuilder<object>(null!));
-            Assert.That(ex!.ParamName, Is.EqualTo("name"));
-        }
-
-        [Test]
-        public void Constructor_ThrowsArgumentException_WhenNameIsEmpty()
-        {
-            var ex = Assert.Throws<ArgumentException>(() => _ = new DefaultHttpMessageHandlerBuilder<object>(string.Empty));
-            Assert.That(ex!.ParamName, Is.EqualTo("name"));
-        }
-
-        [Test]
-        public void PrimaryHandlerFactory_ThrowsArgumentNullException_WhenSetValueIsNull()
-        {
-            var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha");
-
-            var ex = Assert.Throws<ArgumentNullException>(() => builder.PrimaryHandlerFactory = null!);
-            Assert.That(ex!.ParamName, Is.EqualTo("value"));
-        }
-
-        [Test]
-        public void PrimaryHandlerFactory_ReturnsDefaultHandler_WhenNotSet()
-        {
-            var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha");
-            Assert.That(builder.PrimaryHandlerFactory, Is.EqualTo((Func<object, IServiceProvider, HttpMessageHandler>) DefaultHttpMessageHandlerBuilder<object>.DefaultHandler));
-        }
-
-        [Test]
-        public void PrimaryHandlerFactory_ReturnsSetvalue_WhenSet()
-        {
-            var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha");
-            static HttpMessageHandler Expected(object @object, IServiceProvider _) => new MockHttpMessageHandler<object>(@object);
-
-            builder.PrimaryHandlerFactory = Expected;
-
-            Assert.That(builder.PrimaryHandlerFactory, Is.EqualTo((Func<object, IServiceProvider, HttpMessageHandler>) Expected));
-        }
-
-        [Test]
-        public void Build_ThrowsHttpMessageHandlerBuilderException_WhenPrimaryHandlerFactoryReturnsNull()
-        {
-            var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha")
-                .ConfigurePrimaryHandler((_, _) => null!);
-
-            Assert.Throws<HttpMessageHandlerBuilderException>(() =>
-                _ = builder.Build(new object(), _serviceProvider.Object));
-        }
-
-        [Test]
-        public void Build_ThrowsHttpMessageHandlerBuilderException_WhenAnyAdditionalHandlerReturnsNull()
-        {
-            var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha")
-                .AddHttpMessageHandler((_, _) => null!);
-
-            Assert.Throws<HttpMessageHandlerBuilderException>(() =>
-                _ = builder.Build(new object(), _serviceProvider.Object));
-        }
-
-        /// <summary>
-        /// like a stack the handlers are used in order of last added down to the primary handler
-        /// </summary>
-        [Test]
-        public void Build_UsesAdditionalHandlersInReverseOrder_WhenValid()
-        {
-            // Arrange
-            var expected = new[]
+            Assert.That(delegatingHandler, Is.EqualTo(expected[i]));
+            if (delegatingHandler.InnerHandler is DelegatingHandler innerDelegatingHandler)
             {
-                new EmptyDelegatingHandler(1),
-                new EmptyDelegatingHandler(2),
-                new EmptyDelegatingHandler(3),
-                new EmptyDelegatingHandler(4),
-            };
-
-            var primaryHandler = Mock.Of<HttpMessageHandler>();
-            var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha")
-                .ConfigurePrimaryHandler((_, _) => primaryHandler);
-            builder = expected.Aggregate(builder, (current, next) => current.AddHttpMessageHandler((_, _) => next));
-
-            // Act
-            var handler = builder.Build(new object(), Mock.Of<IServiceProvider>());
-
-            // Assert
-
-            var delegatingHandler = (DelegatingHandler) handler; 
-            for (int i = expected.Length - 1; i > 0; i--)
-            {
-                Assert.That(delegatingHandler, Is.EqualTo(expected[i]));
-                if (delegatingHandler.InnerHandler is DelegatingHandler innerDelegatingHandler)
-                {
-                    delegatingHandler = innerDelegatingHandler;
-                }
+                delegatingHandler = innerDelegatingHandler;
             }
-
-        }
-
-        [Test]
-        public void Build_UsesPrimaryHandlerLast_WhenValid()
-        {
-            // Arrange
-            var expected = new[]
-            {
-                new EmptyDelegatingHandler(1),
-                new EmptyDelegatingHandler(2),
-            };
-
-            var expectedPrimary = Mock.Of<HttpMessageHandler>();
-            var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha")
-                .ConfigurePrimaryHandler((_, _) => expectedPrimary);
-            builder = expected.Aggregate(builder, (current, next) => current.AddHttpMessageHandler((_, _) => next));
-
-            // Act
-            var handler = builder.Build(new object(), Mock.Of<IServiceProvider>());
-
-            // Assert
-
-            HttpMessageHandler? actualPrimary = null;
-            var delegatingHandler = (DelegatingHandler) handler; 
-            for (int i = expected.Length - 1; i >= 0; i--)
-            {
-                if (delegatingHandler.InnerHandler is DelegatingHandler innerDelegatingHandler)
-                {
-                    delegatingHandler = innerDelegatingHandler;
-                }
-                else
-                {
-                    actualPrimary = delegatingHandler.InnerHandler;
-                }
-            }
-
-            Assert.That(actualPrimary, Is.EqualTo(expectedPrimary));
-
         }
 
     }
+
+    [Test]
+    public void Build_UsesPrimaryHandlerLast_WhenValid()
+    {
+        // Arrange
+        var expected = new[]
+        {
+            new EmptyDelegatingHandler(1),
+            new EmptyDelegatingHandler(2),
+        };
+
+        var expectedPrimary = Mock.Of<HttpMessageHandler>();
+        var builder = new DefaultHttpMessageHandlerBuilder<object>("alpha")
+            .ConfigurePrimaryHandler((_, _) => expectedPrimary);
+        builder = expected.Aggregate(builder, (current, next) => current.AddHttpMessageHandler((_, _) => next));
+
+        // Act
+        var handler = builder.Build(new object(), Mock.Of<IServiceProvider>());
+
+        // Assert
+
+        HttpMessageHandler? actualPrimary = null;
+        var delegatingHandler = (DelegatingHandler) handler; 
+        for (int i = expected.Length - 1; i >= 0; i--)
+        {
+            if (delegatingHandler.InnerHandler is DelegatingHandler innerDelegatingHandler)
+            {
+                delegatingHandler = innerDelegatingHandler;
+            }
+            else
+            {
+                actualPrimary = delegatingHandler.InnerHandler;
+            }
+        }
+
+        Assert.That(actualPrimary, Is.EqualTo(expectedPrimary));
+
+    }
+
 }

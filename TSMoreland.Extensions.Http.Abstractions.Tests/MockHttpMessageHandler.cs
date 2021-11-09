@@ -17,37 +17,36 @@ using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace TSMoreland.Extensions.Http.Abstractions.Tests
+namespace TSMoreland.Extensions.Http.Abstractions.Tests;
+
+public sealed class MockHttpMessageHandler<T> : HttpMessageHandler
 {
-    public sealed class MockHttpMessageHandler<T> : HttpMessageHandler
+    private readonly HttpResponseMessage? _defaultResponse;
+    private readonly Func<HttpRequestMessage, HttpResponseMessage>? _mapper;
+
+    public MockHttpMessageHandler(T argument, HttpResponseMessage? defaultResponse = null, Func<HttpRequestMessage, HttpResponseMessage>? mapper = null)
     {
-        private readonly HttpResponseMessage? _defaultResponse;
-        private readonly Func<HttpRequestMessage, HttpResponseMessage>? _mapper;
+        Argument = argument;
+        _defaultResponse = defaultResponse;
+        _mapper = mapper;
+    }
 
-        public MockHttpMessageHandler(T argument, HttpResponseMessage? defaultResponse = null, Func<HttpRequestMessage, HttpResponseMessage>? mapper = null)
+    public T Argument { get; }
+
+    /// <summary>
+    /// Exception to throw if non-null
+    /// </summary>
+    public Exception? Exception { get; set; }
+
+
+    protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+    {
+        if (Exception != null)
         {
-            Argument = argument;
-            _defaultResponse = defaultResponse;
-            _mapper = mapper;
+            return Task.FromException<HttpResponseMessage>(Exception);
         }
 
-        public T Argument { get; }
-
-        /// <summary>
-        /// Exception to throw if non-null
-        /// </summary>
-        public Exception? Exception { get; set; }
-
-
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
-        {
-            if (Exception != null)
-            {
-                return Task.FromException<HttpResponseMessage>(Exception);
-            }
-
-            return Task
-                .FromResult(_mapper?.Invoke(request) ?? _defaultResponse ?? new HttpResponseMessage(HttpStatusCode.NotFound));
-        }
+        return Task
+            .FromResult(_mapper?.Invoke(request) ?? _defaultResponse ?? new HttpResponseMessage(HttpStatusCode.NotFound));
     }
 }

@@ -16,27 +16,26 @@ using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NUnit.Framework;
 
-namespace TSMoreland.Extensions.Http.DependencyInjection.Tests
+namespace TSMoreland.Extensions.Http.DependencyInjection.Tests;
+
+[TestFixture]
+public sealed class ServiceCollectionExtensionsTests
 {
-    [TestFixture]
-    public sealed class ServiceCollectionExtensionsTests
+    private Mock<IServiceCollection> _services = null!;
+
+    [SetUp]
+    public void SetUp()
     {
-        private Mock<IServiceCollection> _services = null!;
-
-        [SetUp]
-        public void SetUp()
-        {
-            _services = new Mock<IServiceCollection>();
-        }
-
-        [Test]
-        public void AddHttpClientRepository_ThrowsArgumentNullException_WhenServicesIsNull()
-        {
-            IServiceCollection services = null!;
-
-            var ex = Assert.Throws<ArgumentNullException>(() => _ = services.AddHttpClientRepository<object>());
-            Assert.That(ex!.ParamName, Is.EqualTo(nameof(services)));
-        }
-
+        _services = new Mock<IServiceCollection>();
     }
+
+    [Test]
+    public void AddHttpClientRepository_ThrowsArgumentNullException_WhenServicesIsNull()
+    {
+        IServiceCollection services = null!;
+
+        var ex = Assert.Throws<ArgumentNullException>(() => _ = services.AddHttpClientRepository<object>());
+        Assert.That(ex!.ParamName, Is.EqualTo(nameof(services)));
+    }
+
 }
