@@ -15,46 +15,45 @@ using System;
 using System.Net.Http;
 using TSMoreland.GuardAssertions;
 
-namespace TSMoreland.Extensions.Http.Abstractions
+namespace TSMoreland.Extensions.Http.Abstractions;
+
+public static class HttpMessageHandlerBuilderExtensions
 {
-    public static class HttpMessageHandlerBuilderExtensions
+    public static IHttpMessageHandlerBuilder<T> ConfigurePrimaryHandler<T>(
+        this IHttpMessageHandlerBuilder<T> builder,
+        Func<T, IServiceProvider, HttpMessageHandler> configureHandler)
     {
-        public static IHttpMessageHandlerBuilder<T> ConfigurePrimaryHandler<T>(
-            this IHttpMessageHandlerBuilder<T> builder,
-            Func<T, IServiceProvider, HttpMessageHandler> configureHandler)
-        {
-            Guard.Against.ArgumentNull(builder, nameof(builder));
-            Guard.Against.ArgumentNull(configureHandler, nameof(configureHandler));
+        Guard.Against.ArgumentNull(builder, nameof(builder));
+        Guard.Against.ArgumentNull(configureHandler, nameof(configureHandler));
 
-            builder.PrimaryHandlerFactory = configureHandler;
-            return builder;
-        }
-
-
-        /// <summary>
-        /// Adds a delegate that will be used to create an additional message handler for a named <see cref="HttpClient"/>.
-        /// </summary>
-        /// <param name="builder">The <see cref="IHttpMessageHandlerBuilder{T}"/>.</param>
-        /// <param name="configureHandler">A delegate that is used to create a <see cref="DelegatingHandler"/>.</param>
-        /// <returns>An <see cref="IHttpMessageHandlerBuilder{T"/> that can be used to configure the client.</returns>
-        /// <remarks>
-        /// <para>
-        /// The <see paramref="configureHandler"/> delegate should return a new instance of the message handler each time it
-        /// is invoked.
-        /// </para>
-        /// <para>
-        /// The <see cref="IServiceProvider"/> argument provided to <paramref name="configureHandler"/> will be
-        /// a reference to a scoped service provider that shares the lifetime of the handler being constructed.
-        /// </para>
-        /// </remarks>
-        public static IHttpMessageHandlerBuilder<T> AddHttpMessageHandler<T>(this IHttpMessageHandlerBuilder<T> builder, Func<T, IServiceProvider, DelegatingHandler> configureHandler)
-        {
-            Guard.Against.ArgumentNull(builder, nameof(builder));
-            Guard.Against.ArgumentNull(configureHandler, nameof(configureHandler));
-
-            builder.AdditionalHandlers.Add(configureHandler);
-            return builder;
-        }
-
+        builder.PrimaryHandlerFactory = configureHandler;
+        return builder;
     }
+
+
+    /// <summary>
+    /// Adds a delegate that will be used to create an additional message handler for a named <see cref="HttpClient"/>.
+    /// </summary>
+    /// <param name="builder">The <see cref="IHttpMessageHandlerBuilder{T}"/>.</param>
+    /// <param name="configureHandler">A delegate that is used to create a <see cref="DelegatingHandler"/>.</param>
+    /// <returns>An <see cref="IHttpMessageHandlerBuilder{T"/> that can be used to configure the client.</returns>
+    /// <remarks>
+    /// <para>
+    /// The <see paramref="configureHandler"/> delegate should return a new instance of the message handler each time it
+    /// is invoked.
+    /// </para>
+    /// <para>
+    /// The <see cref="IServiceProvider"/> argument provided to <paramref name="configureHandler"/> will be
+    /// a reference to a scoped service provider that shares the lifetime of the handler being constructed.
+    /// </para>
+    /// </remarks>
+    public static IHttpMessageHandlerBuilder<T> AddHttpMessageHandler<T>(this IHttpMessageHandlerBuilder<T> builder, Func<T, IServiceProvider, DelegatingHandler> configureHandler)
+    {
+        Guard.Against.ArgumentNull(builder, nameof(builder));
+        Guard.Against.ArgumentNull(configureHandler, nameof(configureHandler));
+
+        builder.AdditionalHandlers.Add(configureHandler);
+        return builder;
+    }
+
 }
