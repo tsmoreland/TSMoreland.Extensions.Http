@@ -8,7 +8,7 @@
     <nullable>enable</nullable>
 
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <Version>1.0.0</Version>
+    <Version>1.0.1</Version>
     <Description>Interface and other Abstractions for TSMoreland.Extensions.Http</Description>
     <Copyright>Copyright © 2021 Terry Moreland</Copyright>
     <Product>TSMoreland.GuardAssertions</Product>
@@ -44,7 +44,7 @@
   </ItemGroup>
 
   <ItemGroup Condition="$(Configuration)=='Release'">
-    <PackageReference Include="TSMoreland.Extensions.Http" Version="1.0.0" />
+    <PackageReference Include="TSMoreland.Extensions.Http" Version="1.0.1" />
   </ItemGroup>
 
   <ItemGroup Condition="$(Configuration)=='Debug'">
