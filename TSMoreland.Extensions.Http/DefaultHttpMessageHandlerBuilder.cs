@@ -16,72 +16,71 @@ using System.Net.Http;
 using TSMoreland.Extensions.Http.Abstractions;
 using TSMoreland.GuardAssertions;
 
-namespace TSMoreland.Extensions.Http
+namespace TSMoreland.Extensions.Http;
+
+public class DefaultHttpMessageHandlerBuilder<T> : IHttpMessageHandlerBuilder<T>
 {
-    public class DefaultHttpMessageHandlerBuilder<T> : IHttpMessageHandlerBuilder<T>
+    private Func<T, IServiceProvider, HttpMessageHandler> _primaryHandlerFactory;
+
+    public DefaultHttpMessageHandlerBuilder(string name)
     {
-        private Func<T, IServiceProvider, HttpMessageHandler> _primaryHandlerFactory;
+        Guard.Against.ArgumentNullOrEmpty(name, nameof(name));
 
-        public DefaultHttpMessageHandlerBuilder(string name)
+        Name = name;
+        AdditionalHandlers = new List<Func<T, IServiceProvider, DelegatingHandler>>();
+
+        _primaryHandlerFactory = DefaultHandler;
+
+    }
+
+    /// <inheritdoc/>
+    public string Name { get; }
+
+    /// <inheritdoc/>
+    public Func<T, IServiceProvider, HttpMessageHandler> PrimaryHandlerFactory
+    {
+        get => _primaryHandlerFactory;
+        set
         {
-            Guard.Against.ArgumentNullOrEmpty(name, nameof(name));
-
-            Name = name;
-            AdditionalHandlers = new List<Func<T, IServiceProvider, DelegatingHandler>>();
-
-            _primaryHandlerFactory = DefaultHandler;
-
+            Guard.Against.ArgumentNull(value, nameof(value));
+            _primaryHandlerFactory = value;
         }
+    }
 
-        /// <inheritdoc/>
-        public string Name { get; }
+    /// <inheritdoc/>
+    public IList<Func<T, IServiceProvider, DelegatingHandler>> AdditionalHandlers { get; }
 
-        /// <inheritdoc/>
-        public Func<T, IServiceProvider, HttpMessageHandler> PrimaryHandlerFactory
+    /// <inheritdoc/>
+    public HttpMessageHandler Build(T argument, IServiceProvider serviceProvider)
+    {
+        Guard.Against.ArgumentNull(serviceProvider, nameof(serviceProvider));
+
+        var primary = PrimaryHandlerFactory.Invoke(argument, serviceProvider) ?? 
+                      throw new HttpMessageHandlerBuilderException("Primary handler configurer returned null.");
+
+        var previous = primary;
+        HttpMessageHandler? topMost = null;
+        for (int i = 0; i < AdditionalHandlers.Count; i++)
         {
-            get => _primaryHandlerFactory;
-            set
+            var delegatingHandler = AdditionalHandlers[i](argument, serviceProvider);
+            if (delegatingHandler == null!)
             {
-                Guard.Against.ArgumentNull(value, nameof(value));
-                _primaryHandlerFactory = value;
+                throw new HttpMessageHandlerBuilderException($"Delegating handler at position {i+1} returned null.");
             }
+
+            delegatingHandler.InnerHandler = previous;
+            previous = delegatingHandler;
+            topMost = previous;
         }
+        topMost ??= primary;
+        return topMost!;
+    }
 
-        /// <inheritdoc/>
-        public IList<Func<T, IServiceProvider, DelegatingHandler>> AdditionalHandlers { get; }
-
-        /// <inheritdoc/>
-        public HttpMessageHandler Build(T argument, IServiceProvider serviceProvider)
-        {
-            Guard.Against.ArgumentNull(serviceProvider, nameof(serviceProvider));
-
-            var primary = PrimaryHandlerFactory.Invoke(argument, serviceProvider) ?? 
-                          throw new HttpMessageHandlerBuilderException("Primary handler configurer returned null.");
-
-            var previous = primary;
-            HttpMessageHandler? topMost = null;
-            for (int i = 0; i < AdditionalHandlers.Count; i++)
-            {
-                var delegatingHandler = AdditionalHandlers[i](argument, serviceProvider);
-                if (delegatingHandler == null!)
-                {
-                    throw new HttpMessageHandlerBuilderException($"Delegating handler at position {i+1} returned null.");
-                }
-
-                delegatingHandler.InnerHandler = previous;
-                previous = delegatingHandler;
-                topMost = previous;
-            }
-            topMost ??= primary;
-            return topMost!;
-        }
-
-        /// <summary>
-        /// Internal for test
-        /// </summary>
-        internal static HttpMessageHandler DefaultHandler(T argument, IServiceProvider serviceProvider)
-        {
-            return new HttpClientHandler();
-        }
+    /// <summary>
+    /// Internal for test
+    /// </summary>
+    internal static HttpMessageHandler DefaultHandler(T argument, IServiceProvider serviceProvider)
+    {
+        return new HttpClientHandler();
     }
 }
