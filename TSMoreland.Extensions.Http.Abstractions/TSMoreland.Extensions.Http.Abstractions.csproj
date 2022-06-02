@@ -8,7 +8,7 @@
     <nullable>enable</nullable>
 
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <Version>1.0.2</Version>
+    <Version>1.0.3</Version>
     <Description>Interface and other Abstractions for TSMoreland.Extensions.Http</Description>
     <Copyright>Copyright © 2021 Terry Moreland</Copyright>
     <Product>TSMoreland.GuardAssertions</Product>
@@ -40,7 +40,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Http" Version="6.0.0" />
-    <PackageReference Include="TSMoreland.GuardAssertions" Version="1.1.1" />
+    <PackageReference Include="TSMoreland.GuardAssertions" Version="1.1.*" />
   </ItemGroup>
 
   <PropertyGroup Condition="'$(GITHUB_ACTIONS)' == 'true'">
