@@ -6,16 +6,12 @@
     <IsPackable>false</IsPackable>
     <nullable>enable</nullable>
     <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\TSMoreland.Extensions.Http.snk</AssemblyOriginatorKeyFile>
+    <AssemblyOriginatorKeyFile>..\..\TSMoreland.Extensions.Http.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\TSMoreland.Extensions.Http.snk" Link="TSMoreland.Extensions.Http.snk" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.2.0" />
-    <PackageReference Include="Moq" Version="4.18.1" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.3.1" />
+    <PackageReference Include="Moq" Version="4.18.2" />
     <PackageReference Include="NUnit" Version="3.13.3" />
     <PackageReference Include="NUnit3TestAdapter" Version="4.2.1" />
     <PackageReference Include="coverlet.collector" Version="3.1.2">
@@ -29,7 +25,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TSMoreland.Extensions.Http.Abstractions\TSMoreland.Extensions.Http.Abstractions.csproj" />
-    <ProjectReference Include="..\TSMoreland.Extensions.Http\TSMoreland.Extensions.Http.csproj" />
+    <ProjectReference Include="..\..\src\TSMoreland.Extensions.Http.Abstractions\TSMoreland.Extensions.Http.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\TSMoreland.Extensions.Http.DependencyInjection\TSMoreland.Extensions.Http.DependencyInjection.csproj" />
   </ItemGroup>
+
 </Project>

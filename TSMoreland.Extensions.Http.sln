@@ -3,26 +3,26 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.31410.223
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http", "TSMoreland.Extensions.Http\TSMoreland.Extensions.Http.csproj", "{E8D415E9-DB81-4F5D-ACA3-1AE37CCCE6CC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http", "src\TSMoreland.Extensions.Http\TSMoreland.Extensions.Http.csproj", "{E8D415E9-DB81-4F5D-ACA3-1AE37CCCE6CC}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{5CF43DA9-27BA-4FED-BC25-FF04D6B23706}"
 	ProjectSection(SolutionItems) = preProject
 		.editorconfig = .editorconfig
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.Tests", "TSMoreland.Extensions.Http.Tests\TSMoreland.Extensions.Http.Tests.csproj", "{B956F470-57C0-41CD-9F37-1F819E9EC0FC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.Tests", "test\TSMoreland.Extensions.Http.Tests\TSMoreland.Extensions.Http.Tests.csproj", "{B956F470-57C0-41CD-9F37-1F819E9EC0FC}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.Abstractions", "TSMoreland.Extensions.Http.Abstractions\TSMoreland.Extensions.Http.Abstractions.csproj", "{5FE8BD73-0295-448C-A3E4-9D3CDFBB10CE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.Abstractions", "src\TSMoreland.Extensions.Http.Abstractions\TSMoreland.Extensions.Http.Abstractions.csproj", "{5FE8BD73-0295-448C-A3E4-9D3CDFBB10CE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.Abstractions.Tests", "TSMoreland.Extensions.Http.Abstractions.Tests\TSMoreland.Extensions.Http.Abstractions.Tests.csproj", "{D0F2F37E-70C1-4749-9D91-FEC53BF6E42C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.Abstractions.Tests", "test\TSMoreland.Extensions.Http.Abstractions.Tests\TSMoreland.Extensions.Http.Abstractions.Tests.csproj", "{D0F2F37E-70C1-4749-9D91-FEC53BF6E42C}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.DependencyInjection", "TSMoreland.Extensions.Http.DependencyInjection\TSMoreland.Extensions.Http.DependencyInjection.csproj", "{7423FCFC-9AA5-452E-B7F4-EDA0A75107F4}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.DependencyInjection", "src\TSMoreland.Extensions.Http.DependencyInjection\TSMoreland.Extensions.Http.DependencyInjection.csproj", "{7423FCFC-9AA5-452E-B7F4-EDA0A75107F4}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.DependencyInjection.Tests", "TSMoreland.Extensions.Http.DependencyInjection.Tests\TSMoreland.Extensions.Http.DependencyInjection.Tests.csproj", "{D2E3378A-FAA8-46D9-B761-46E8032C069A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TSMoreland.Extensions.Http.DependencyInjection.Tests", "test\TSMoreland.Extensions.Http.DependencyInjection.Tests\TSMoreland.Extensions.Http.DependencyInjection.Tests.csproj", "{D2E3378A-FAA8-46D9-B761-46E8032C069A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http.Polly", "TSMoreland.Extensions.Http.Polly\TSMoreland.Extensions.Http.Polly.csproj", "{F52E2064-662D-4922-BC66-83B760A3B591}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http.Polly", "src\TSMoreland.Extensions.Http.Polly\TSMoreland.Extensions.Http.Polly.csproj", "{F52E2064-662D-4922-BC66-83B760A3B591}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http.Polly.Tests", "TSMoreland.Extensions.Http.Polly.Tests\TSMoreland.Extensions.Http.Polly.Tests.csproj", "{7E2F7B2C-EADE-4349-9AFF-8BA3B4FE4E95}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TSMoreland.Extensions.Http.Polly.Tests", "test\TSMoreland.Extensions.Http.Polly.Tests\TSMoreland.Extensions.Http.Polly.Tests.csproj", "{7E2F7B2C-EADE-4349-9AFF-8BA3B4FE4E95}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
