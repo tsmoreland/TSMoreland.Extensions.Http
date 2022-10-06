@@ -1,0 +1,12 @@
+<Project>
+  <PropertyGroup>
+    <VersionPrefix>1.0.4</VersionPrefix>
+    <AssemblyVersion>1.0.4.0</AssemblyVersion>
+    <PackageVersion>1.0.4</PackageVersion>
+    <Copyright>Copyright © 2021 Terry Moreland</Copyright>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <LangVersion>preview</LangVersion>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+</Project>

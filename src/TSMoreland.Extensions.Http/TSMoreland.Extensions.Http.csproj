@@ -10,8 +10,6 @@
     <Copyright>Copyright © 2021 Terry Moreland</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
 
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <Version>1.0.3</Version>
     <Description>The HttpClient repository is a a decorating factory pattern for Microsoft.Extensions.Http.  The HttpClient repository provides similar functionality to HttpClient factory but extende to allow named clients to be added or removed after service collection is built.</Description>
     <Copyright>Copyright © 2021 Terry Moreland</Copyright>
     <Product>TSMoreland.GuardAssertions</Product>
