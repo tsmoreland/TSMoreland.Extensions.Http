@@ -7,8 +7,6 @@
     <LangVersion>10</LangVersion>
     <nullable>enable</nullable>
 
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <Version>1.0.3</Version>
     <Description>Interface and other Abstractions for TSMoreland.Extensions.Http</Description>
     <Copyright>Copyright © 2021 Terry Moreland</Copyright>
     <Product>TSMoreland.GuardAssertions</Product>

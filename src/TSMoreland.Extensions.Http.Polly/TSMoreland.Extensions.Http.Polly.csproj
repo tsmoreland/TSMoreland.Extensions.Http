@@ -10,8 +10,6 @@
     <Copyright>Copyright © 2021 Terry Moreland</Copyright>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
 
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <Version>1.0.3</Version>
     <Description>This package integrates IHttpClientRepository with the Polly library, to add transient-fault-handling and resiliency through fluent policies such as Retry, Circuit Breaker, Timeout, Bulkhead Isolation, and Fallback.</Description>
     <Copyright>Copyright © 2021 Terry Moreland</Copyright>
     <Product>TSMoreland.GuardAssertions</Product>
