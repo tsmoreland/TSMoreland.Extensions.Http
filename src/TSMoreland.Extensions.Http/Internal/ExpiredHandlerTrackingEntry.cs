@@ -22,6 +22,7 @@ namespace TSMoreland.Extensions.Http.Internal
         // We need to allow it to be GC'ed.
         public ExpiredHandlerTrackingEntry(ActiveHandlerTrackingEntry other)
         {
+
             Name = other.Name;
             Scope = other.Scope;
 
@@ -31,7 +32,7 @@ namespace TSMoreland.Extensions.Http.Internal
 
         public bool CanDispose => !_livenessTracker.IsAlive;
 
-        public HttpMessageHandler InnerHandler { get; }
+        public HttpMessageHandler? InnerHandler { get; }
 
         public string Name { get; }
 
