@@ -12,7 +12,6 @@
 // 
 
 using System.Diagnostics;
-using System.Net.Http;
 
 namespace TSMoreland.Extensions.Http.Abstractions.Tests;
 

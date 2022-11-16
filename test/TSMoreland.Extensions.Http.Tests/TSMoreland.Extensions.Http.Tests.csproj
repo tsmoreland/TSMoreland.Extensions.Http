@@ -1,10 +1,11 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net7.0;net6.0</TargetFrameworks>
     <LangVersion>11</LangVersion>
     <IsPackable>false</IsPackable>
     <nullable>enable</nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
     <SignAssembly>true</SignAssembly>
     <AssemblyOriginatorKeyFile>..\..\TSMoreland.Extensions.Http.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
