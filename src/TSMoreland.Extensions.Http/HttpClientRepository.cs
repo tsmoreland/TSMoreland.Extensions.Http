@@ -1,5 +1,5 @@
 ﻿//
-// Copyright © 2021 Terry Moreland
+// Copyright (c) 2022 Terry Moreland
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), 
 // to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, 
 // and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
@@ -13,11 +13,8 @@
 // Contains code based on or copied from https://github.com/dotnet/runtime/blob/main/src/libraries/Microsoft.Extensions.Http/src/DefaultHttpClientFactory.cs
 // which is licensed under the the MIT License (same license as above).
 
-using System;
 using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.Net.Http;
-using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TSMoreland.Extensions.Http.Abstractions;
@@ -42,7 +39,7 @@ namespace TSMoreland.Extensions.Http;
 /// </summary>
 public sealed class HttpClientRepository<T> : IHttpClientRepository<T>
 {
-    private static readonly TimerCallback _cleanupCallback = (s) => ((HttpClientRepository<T>)s).CleanupTimer_Tick();
+    private static readonly TimerCallback _cleanupCallback = (s) => ((HttpClientRepository<T>?)s)?.CleanupTimer_Tick();
     private readonly IHttpClientFactory _clientFactory;
     private readonly IHttpMessageHandlerFactory _messageHandlerFactory;
     private readonly IServiceScopeFactory _scopeFactory;
@@ -94,7 +91,7 @@ public sealed class HttpClientRepository<T> : IHttpClientRepository<T>
     /// <param name="scopeFactory">scope factory used when creating tracking entries to managed life time of client and it's dependencies</param>
     /// <param name="logger"><see cref="ILogger"/> instance for diagnostic information</param>
     public HttpClientRepository(
-        IHttpClientFactory clientFactory, 
+        IHttpClientFactory clientFactory,
         IHttpMessageHandlerFactory messageHandlerFactory,
         IServiceScopeFactory scopeFactory,
         ILogger<HttpClientRepository<T>> logger)
@@ -176,11 +173,11 @@ public sealed class HttpClientRepository<T> : IHttpClientRepository<T>
         // add, most recent call wins the race if multiple calls
 
         bool isPresent = false;
-        MessageHandlersByName.AddOrUpdate(name, builder, 
+        MessageHandlersByName.AddOrUpdate(name, builder,
             (_, value) =>
             {
-                isPresent = true; 
-                return value; 
+                isPresent = true;
+                return value;
             });
 
         return isPresent
@@ -308,18 +305,21 @@ public sealed class HttpClientRepository<T> : IHttpClientRepository<T>
     /// internal for testing
     /// </para>
     /// </remarks>
-    internal void ExpiryTimer_Tick(object state)
+    internal void ExpiryTimer_Tick(object? state)
     {
-        var active = (ActiveHandlerTrackingEntry)state;
+        if (state is not ActiveHandlerTrackingEntry active)
+        {
+            return;
+        }
 
         // The timer callback should be the only one removing from the active collection. If we can't find
         // our entry in the collection, then this is a bug.
-        bool removed = _activeHandlers.TryRemove(active.Name, out Lazy<ActiveHandlerTrackingEntry> found);
+        bool removed = _activeHandlers.TryRemove(active.Name, out Lazy<ActiveHandlerTrackingEntry>? found);
         if (!removed)
         {
             _logger.LogWarning("Active Handler not found during expiry, this may be due to its forceful removal due to change in settings");
         }
-        else if (!ReferenceEquals(active, found.Value))
+        else if (found is not null && !ReferenceEquals(active, found.Value))
         {
             _logger.LogWarning("Entry found but value did not match, value will be re-added - if the same engine is updated too rapidly " +
                                "this may result in a race condition leaving us with out of date handler value");
@@ -446,7 +446,7 @@ public sealed class HttpClientRepository<T> : IHttpClientRepository<T>
                 {
                     try
                     {
-                        entry.InnerHandler.Dispose();
+                        entry.InnerHandler?.Dispose();
                         entry.Scope?.Dispose();
                     }
                     catch (Exception ex)
